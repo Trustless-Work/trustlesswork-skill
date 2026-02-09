@@ -23,6 +23,8 @@ cp -r trustless-work-dev-skill ~/.cursor/skills/trustless-work-dev
 trustless-work-dev-skill/
 ├── SKILL.md                    # Main skill definition (required)
 ├── README.md                   # Project documentation
+├── CONTRIBUTING.md             # Contributing guidelines
+├── CODE_OF_CONDUCT.md          # Contributor Covenant Code of Conduct
 ├── package.json                # NPM package configuration
 ├── LICENSE                     # Apache-2.0 License
 ├── .gitignore                  # Git ignore file
@@ -173,7 +175,9 @@ npx trustless-work add escrows/escrows-by-signer/table
 
 ## Contributing
 
-Contributions welcome! Please ensure any updates maintain the skill's concise format and follow the structure outlined in the files.
+Contributions welcome! Please read our [Contributing Guide](CONTRIBUTING.md) for details on how to contribute to this project.
+
+Please note that this project follows the [Contributor Covenant Code of Conduct](CODE_OF_CONDUCT.md). By participating, you are expected to uphold this code.
 
 ## License
 
