@@ -102,7 +102,7 @@ This skill is automatically applied when working on:
 - Fund: `POST /escrow/multi-release/fund-escrow`
 - Change Status: `POST /escrow/multi-release/change-milestone-status`
 - Approve: `POST /escrow/multi-release/approve-milestone`
-- Release: `POST /escrow/multi-release/release-milestone`
+- Release: `POST /escrow/multi-release/release-milestone-funds`
 - Dispute: `POST /escrow/multi-release/dispute-escrow`
 - Resolve: `POST /escrow/multi-release/resolve-dispute`
 - Update: `PUT /escrow/multi-release/update-escrow`
@@ -112,6 +112,7 @@ This skill is automatically applied when working on:
 - Query: `GET /helper/get-escrow-by-contract-ids`
 - Query by Signer: `GET /helper/get-escrows-by-signer`
 - Query by Role: `GET /helper/get-escrows-by-role`
+- Set Trustline: `POST /helper/set-trustline`
 - Submit: `POST /helper/send-transaction`
 
 ### React SDK Hooks
@@ -136,6 +137,9 @@ import {
 ```bash
 # Install blocks
 npm install @trustless-work/blocks
+
+# Initialize project (installs deps, wires providers)
+npx trustless-work init
 
 # List available blocks
 npx trustless-work list
@@ -168,8 +172,10 @@ npx trustless-work add escrows/escrows-by-signer/table
 ## Resources
 
 - [Trustless Work Documentation](https://docs.trustlesswork.com)
-- [Trustless Work Dashboard](https://dapp.trustlesswork.com/dashboard)
+- [Backoffice dApp](https://dapp.trustlesswork.com)
+- [Demo dApp](https://demo.trustlesswork.com)
 - [Blocks Playground](https://blocks.trustlesswork.com/blocks)
+- [Swagger (Mainnet)](https://api.trustlesswork.com/docs)
 - [Stellar Documentation](https://developers.stellar.org/)
 - [Soroban Documentation](https://soroban.stellar.org/docs)
 
