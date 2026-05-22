@@ -1,6 +1,6 @@
 ---
 name: trustless-work-dev
-description: Comprehensive guide for developing with Trustless Work platform - escrow contracts, milestones, disputes, API integration, and Stellar/Soroban smart contracts. Use when building escrow systems, integrating Trustless Work API, working with Stellar blockchain, managing milestone-based payments, handling disputes, or when users mention Trustless Work, escrow contracts, or conditional payments.
+description: Comprehensive guide for developing with Trustless Work Escrow-as-a-Service (EaaS) - REST API, React SDK (@trustless-work/escrow hooks), Blocks SDK (pre-built UI), escrow lifecycle, milestones, disputes, roles, and Stellar/Soroban smart contracts. Use when building escrow systems, marketplace payments, freelance platforms, grant disbursements, integrating Trustless Work API or SDK, working with Stellar blockchain, managing milestone-based payments, handling disputes, or when users mention Trustless Work, escrow contracts, or conditional payments.
 ---
 
 # Trustless Work Development Skill
@@ -53,11 +53,16 @@ Apply automatically when:
 - **[skills/blocks/providers.md](skills/blocks/providers.md)** - Provider setup and context API
 - **[skills/blocks/hooks.md](skills/blocks/hooks.md)** - TanStack Query hooks
 
-## API Base URL
+## API Base URLs
 
-Production: `https://api.trustlesswork.com`
+- **Mainnet**: `https://api.trustlesswork.com`
+- **Testnet**: `https://dev.api.trustlesswork.com`
+- **Swagger (Mainnet)**: `https://api.trustlesswork.com/docs`
+- **Swagger (Testnet)**: `https://dev.api.trustlesswork.com/docs`
 
 All endpoints require: `x-api-key: YOUR_API_KEY` header
+
+Rate limit: **50 requests per 60 seconds**
 
 ## Common Transaction Flow
 
@@ -68,8 +73,9 @@ All endpoints require: `x-api-key: YOUR_API_KEY` header
 
 ## Resources
 
-- Documentation: Use `mcp_trustlesswork_searchDocumentation` tool
-- Dashboard: https://dapp.trustlesswork.com/dashboard
+- Documentation: Use `mcp__trustless-work__searchDocumentation` tool
+- Backoffice dApp: https://dapp.trustlesswork.com
+- Demo dApp: https://demo.trustlesswork.com
 - Blocks Playground: https://blocks.trustlesswork.com/blocks
 - Stellar Docs: https://developers.stellar.org/
 - Soroban Docs: https://soroban.stellar.org/docs
