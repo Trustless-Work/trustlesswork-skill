@@ -1,6 +1,18 @@
 ---
 name: trustless-work-dev
-description: Comprehensive guide for developing with Trustless Work Escrow-as-a-Service (EaaS) - REST API, React SDK (@trustless-work/escrow hooks), Blocks SDK (pre-built UI), escrow lifecycle, milestones, disputes, roles, and Stellar/Soroban smart contracts. Use when building escrow systems, marketplace payments, freelance platforms, grant disbursements, integrating Trustless Work API or SDK, working with Stellar blockchain, managing milestone-based payments, handling disputes, or when users mention Trustless Work, escrow contracts, or conditional payments.
+description: >
+  Use when integrating Trustless Work escrow, deploying single-release or multi-release escrow
+  contracts, handling milestone-based payments, releasing funds, managing disputes on Stellar, or
+  working with the REST API, React SDK (@trustless-work/escrow hooks), or Blocks SDK (pre-built UI).
+  Also use when users mention escrow, conditional payments, non-custodial payments, USDC escrow,
+  freelance platforms, marketplace payments, grant disbursements, Soroban contracts, or Stellar
+  blockchain payments — even if they don't explicitly mention Trustless Work.
+license: Apache-2.0
+compatibility: Designed for Claude Code and compatible AI coding assistants. Requires network access to query Trustless Work APIs.
+metadata:
+  author: Trustless Work
+  version: "1.0"
+allowed-tools: mcp__trustless-work__searchDocumentation mcp__trustless-work__getPage
 ---
 
 # Trustless Work Development Skill
@@ -22,36 +34,47 @@ When working with Trustless Work:
    - **Blocks SDK**: Pre-built UI components - See [skills/blocks/introduction.md](skills/blocks/introduction.md)
 5. **Implement workflow**: Deploy → Fund → Complete → Approve → Release
 
-## When to Use This Skill
+## Gotchas
 
-Apply automatically when:
-- Building escrow or milestone-based payment systems
-- Integrating Trustless Work API
-- Working with Stellar blockchain and Soroban contracts
-- Implementing conditional payment workflows
-- Handling disputes in payment systems
-- Users mention "escrow", "milestone payments", "Trustless Work"
+These are the non-obvious facts that the agent will get wrong without being told:
+
+- **`amount` type differs by endpoint**: In `deploy` REST calls `amount` is a `number`. In `fund-escrow` REST calls `amount` is a `string`. React SDK's `FundEscrowPayload` uses `number`. Don't mix them.
+- **`milestoneIndex` is always a string**: Pass `"0"` not `0` — even though it looks numeric.
+- **Don't include `status` or `approvedFlag` in milestone objects when deploying**: Only `description` is valid on deploy. Adding those fields causes errors.
+- **Header is `x-api-key`**: Not `Authorization: Bearer`. This is the single most common auth mistake.
+- **Single-release requires ALL milestones approved before any release**: You cannot call release-funds until every milestone is individually approved. Multi-release allows per-milestone releases.
+- **Resolve-dispute distributions must sum to post-fee balance**: On mainnet, the 0.3% protocol fee is already deducted before you can distribute. Use the actual escrow balance, not the original deposit amount.
+- **Mainnet has a 0.3% protocol fee on top of platform fee**: Total cost = `amount + platformFee + (amount × 0.003)`.
+- **After funding, only milestones can be added**: Roles, amount, and platform fee cannot be changed once the escrow has funds.
+- **`trustline.address` is always the issuer address (starts with G), never the Soroban contract address (starts with C)**: The API resolves the Soroban contract address internally — you don't need to find it. USDC Testnet: `GBBD47IF6LWK7P7MDEVSCWR7DPUWV3NY3DTQEVFL4NAT4AQH3ZLLFLA5` — USDC Mainnet: `GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN`. Using a C address or the wrong network's address causes silent funding failures.
+- **All parties need trustlines before the escrow can be funded**: Payer, receiver, and platform address must all hold a trustline for the escrow token. Read [skills/api/trustlines.md](skills/api/trustlines.md) if trustline errors occur.
+- **Service Provider and Approver should not be the same address**: The API allows it, but it defeats escrow security (self-approval of own work).
+- **React SDK: `useSendTransaction` is required after every write hook**: Hooks return an unsigned XDR only. You must sign it and call `sendTransaction` — without this, nothing reaches the blockchain.
+- **React SDK: the `type` parameter must match the payload type**: `"single-release"` expects `SingleRelease*Payload`; `"multi-release"` expects `MultiRelease*Payload`. Mismatching causes runtime errors.
+- **Use `validateOnChain=true` when querying before critical operations**: Without it you may receive stale cached data. Always use it before release, dispute, or resolve calls.
 
 ## Reference Files
 
-### REST API Documentation
-- **[skills/api/core-concepts.md](skills/api/core-concepts.md)** - Roles, lifecycle, flags, API authentication
-- **[skills/api/types.md](skills/api/types.md)** - Complete TypeScript type definitions for all payloads, responses, and errors
-- **[skills/api/single-release-escrow.md](skills/api/single-release-escrow.md)** - Single-release escrow implementation guide
-- **[skills/api/multi-release-escrow.md](skills/api/multi-release-escrow.md)** - Multi-release escrow implementation guide
-- **[skills/api/trustlines.md](skills/api/trustlines.md)** - Stellar trustline configuration
+Load these on demand — only when the task requires them:
 
-### React SDK Documentation
-- **[skills/react-sdk/react-sdk.md](skills/react-sdk/react-sdk.md)** - React SDK overview and quick reference
-- **[skills/react-sdk/hooks-reference.md](skills/react-sdk/hooks-reference.md)** - Complete detailed documentation for all hooks (`useInitializeEscrow`, `useFundEscrow`, `useApproveMilestone`, `useReleaseFunds`, `useStartDispute`, `useResolveDispute`, `useUpdateEscrow`, `useChangeMilestoneStatus`, `useWithdrawRemainingFunds`, `useSendTransaction`) with full examples
-- **[skills/react-sdk/vibe-coding.md](skills/react-sdk/vibe-coding.md)** - Single-file AI context guide with global rules, implementation prompts, and step-by-step feature guides (essential for AI workflows)
+### REST API
+- Read **[skills/api/core-concepts.md](skills/api/core-concepts.md)** for roles, lifecycle, flags, and auth details.
+- Read **[skills/api/types.md](skills/api/types.md)** when you need TypeScript type definitions for payloads, responses, or errors.
+- Read **[skills/api/single-release-escrow.md](skills/api/single-release-escrow.md)** when implementing any single-release endpoint (deploy, fund, approve, release, dispute, resolve, update).
+- Read **[skills/api/multi-release-escrow.md](skills/api/multi-release-escrow.md)** when implementing any multi-release endpoint.
+- Read **[skills/api/trustlines.md](skills/api/trustlines.md)** when trustline errors occur, when setting up new accounts, or when the user asks about tokens/assets.
 
-### Blocks SDK Documentation
-- **[skills/blocks/introduction.md](skills/blocks/introduction.md)** - Blocks SDK overview and installation
-- **[skills/blocks/vibe-coding.md](skills/blocks/vibe-coding.md)** - Single-file AI context guide (essential for AI workflows)
-- **[skills/blocks/components.md](skills/blocks/components.md)** - Available UI components
-- **[skills/blocks/providers.md](skills/blocks/providers.md)** - Provider setup and context API
-- **[skills/blocks/hooks.md](skills/blocks/hooks.md)** - TanStack Query hooks
+### React SDK
+- Read **[skills/react-sdk/react-sdk.md](skills/react-sdk/react-sdk.md)** for SDK setup, provider config, and hook overview.
+- Read **[skills/react-sdk/hooks-reference.md](skills/react-sdk/hooks-reference.md)** for complete parameter docs and examples of any specific hook (`useInitializeEscrow`, `useFundEscrow`, `useApproveMilestone`, `useReleaseFunds`, `useStartDispute`, `useResolveDispute`, `useUpdateEscrow`, `useChangeMilestoneStatus`, `useWithdrawRemainingFunds`, `useSendTransaction`).
+- Read **[skills/react-sdk/vibe-coding.md](skills/react-sdk/vibe-coding.md)** when scaffolding a full React/Next.js integration from scratch (contains global rules, step-by-step guides, and AI workflow context).
+
+### Blocks SDK (pre-built UI)
+- Read **[skills/blocks/introduction.md](skills/blocks/introduction.md)** for installation and SDK overview.
+- Read **[skills/blocks/vibe-coding.md](skills/blocks/vibe-coding.md)** when scaffolding a Blocks integration from scratch.
+- Read **[skills/blocks/components.md](skills/blocks/components.md)** for available UI components.
+- Read **[skills/blocks/providers.md](skills/blocks/providers.md)** for provider setup and context API.
+- Read **[skills/blocks/hooks.md](skills/blocks/hooks.md)** for TanStack Query hooks.
 
 ## API Base URLs
 
@@ -71,11 +94,13 @@ Rate limit: **50 requests per 60 seconds**
 3. Submit via `/helper/send-transaction` → Broadcast to Stellar
 4. Verify on-chain → Query with `validateOnChain=true`
 
-## Resources
+## Live Documentation
 
-- Documentation: Use `mcp__trustless-work__searchDocumentation` tool
+Use the MCP tools when reference files don't cover a specific endpoint or feature:
+- `mcp__trustless-work__searchDocumentation` — search for any topic
+- `mcp__trustless-work__getPage` — retrieve a specific documentation page
+
+Other resources:
 - Backoffice dApp: https://dapp.trustlesswork.com
 - Demo dApp: https://demo.trustlesswork.com
 - Blocks Playground: https://blocks.trustlesswork.com/blocks
-- Stellar Docs: https://developers.stellar.org/
-- Soroban Docs: https://soroban.stellar.org/docs
