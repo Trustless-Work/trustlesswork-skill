@@ -522,14 +522,14 @@ Returns unsigned XDR transaction:
 
 ## Release Milestone Funds
 
-**Endpoint:** `POST /escrow/multi-release/release-milestone`
+**Endpoint:** `POST /escrow/multi-release/release-milestone-funds`
 
-Releases funds for a specific approved milestone. This happens automatically when milestone is approved, but can be called explicitly.
+Releases funds for a specific approved milestone. Called by the Release Signer after a milestone is approved.
 
 ### Request Schema
 
 ```typescript
-interface ReleaseMilestone {
+interface ReleaseMilestoneFunds {
   contractId: string;      // ID (address) that identifies the escrow contract
   milestoneIndex: string;  // Index of the milestone to be released
   releaseSigner: string;   // Address of the user in charge of releasing the escrow funds to the service provider
@@ -872,7 +872,7 @@ export const withdrawRemainingFunds = async (
   const { address } = await kit.getAddress();
 
   const response = await http.post(
-    "/escrow/multi-release/withdraw-remaining-funds",
+    "/escrow/multi-release/withdraw-remaining-funds", // only for multi-release
     {
       contractId,
       disputeResolver: address,
@@ -901,11 +901,11 @@ export const withdrawRemainingFunds = async (
 import axios from "axios";
 
 const http = axios.create({
-  baseURL: "https://api.trustlesswork.com",
+  baseURL: "https://dev.api.trustlesswork.com", // or https://api.trustlesswork.com for mainnet
   timeout: 10000,
   headers: {
     "Content-Type": "application/json",
-    "x-api-key": process.env.TRUSTLESS_WORK_API_KEY,
+    "x-api-key": process.env.NEXT_PUBLIC_API_KEY,
   },
 });
 
