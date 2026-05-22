@@ -38,9 +38,9 @@ You are methodical, precise, and a master at reasoning through complex requireme
 ## Trustless Work Integration Context
 When working with Trustless Work:
 - Documentation (I'll provide you the docs in the cursor docs management):  
-  - React Library → <https://docs.trustlesswork.com/trustless-work/react-library>  
-  - Wallet Kit → <https://docs.trustlesswork.com/trustless-work/developer-resources/stellar-wallet-kit-quick-integration>  
-  - Types → <https://docs.trustlesswork.com/trustless-work/developer-resources/types>  
+  - React SDK → <https://docs.trustlesswork.com/trustless-work/escrow-react-sdk/getting-started>  
+  - Types → <https://docs.trustlesswork.com/trustless-work/introduction/developer-resources/types>
+  - API Reference → <https://docs.trustlesswork.com/trustless-work/api-rest/introduction>  
 - Ensure proper installation and configuration before usage.
 - Use provided Types from the documentation when applicable.
 - Follow the API and component usage exactly as described in the docs.
@@ -68,20 +68,22 @@ Before finalizing:
 
 Attach the Global Context and referenced documents to all prompts for clarity and consistency.
 
-### 1 - Trustless Work - React Library Setup
+### 1 - Trustless Work - React SDK Setup
 
-Below are the essential steps to get started with the installation and basic configuration. You should attach these links as docs reference: [React Library TW](https://docs.trustlesswork.com/trustless-work/react-library/getting-started)
+Below are the essential steps to get started with the installation and basic configuration. You should attach these links as docs reference: [React SDK TW](https://docs.trustlesswork.com/trustless-work/escrow-react-sdk/getting-started)
 
 {% hint style="info" %}
 Ensure to set the API Key in a `.env` file during this step.
 {% endhint %}
 
 ```markdown
-Configure the initial setup to use the Trustless Work React library in a Next.js app.
+Configure the initial setup to use the Trustless Work React SDK in a Next.js app.
 
-- Install the required dependency.
-- Set up the provider at the app root.
-- Ensure all imports are correct.
+- Install @trustless-work/escrow.
+- Create a TrustlessWorkProvider client component wrapping TrustlessWorkConfig from @trustless-work/escrow.
+  Use the `development` base URL constant for testnet (or `mainNet` for production) and NEXT_PUBLIC_API_KEY env var.
+- Wrap the app root with TrustlessWorkProvider in app/layout.tsx.
+- Ensure all imports are correct and the provider is a "use client" component.
 - Use TypeScript if types are available in the documentation.
 ```
 
@@ -101,7 +103,7 @@ Configure the initial setup for the Stellar Wallet Kit in a Next.js app based on
 
 ### 3 - Initialize Escrow
 
-This prompt will guide you through implementing the initialize escrow feature in a Next.js application using the Trustless Work library. You should attach these links as docs reference: [React Library TW](https://docs.trustlesswork.com/trustless-work/react-library/getting-started) and [Types TW](https://docs.trustlesswork.com/trustless-work/developer-resources/types)
+This prompt will guide you through implementing the initialize escrow feature in a Next.js application using the Trustless Work library. You should attach these links as docs reference: [React SDK TW](https://docs.trustlesswork.com/trustless-work/escrow-react-sdk/getting-started) and [Types TW](https://docs.trustlesswork.com/trustless-work/introduction/developer-resources/types)
 
 ```markdown
 Implement the useInitializeEscrow function from the Trustless Work React library in our Next.js app.
@@ -109,7 +111,7 @@ Implement the useInitializeEscrow function from the Trustless Work React library
 - Use mock data for the payload values, except for the fields explicitly provided below.
 - Add a button that initializes the escrow when clicked.
 - Use multi-release mode.
-- Use this USDC trustline address: GBBD47IF6LWK7P7MDEVSCWR7DPUWV3NY3DTQEVFL4NAT4AQH3ZLLFLA5
+- Use this USDC trustline address (testnet): GBBD47IF6LWK7P7MDEVSCWR7DPUWV3NY3DTQEVFL4NAT4AQH3ZLLFLA5
 - Use this symbol value: USDC
 - For all roles, use the wallet address of the currently connected user.
 - The payload type must be InitializePayload (as defined in the official payloads documentation: <https://docs.trustlesswork.com/trustless-work/introduction/developer-resources/types/payloads/deploy>).
@@ -121,7 +123,7 @@ Implement the useInitializeEscrow function from the Trustless Work React library
 
 ### 4 - Save Escrow in Global Store
 
-This prompt will help you implement a global state management solution to store and access escrow data across your application. You should attach these links as docs reference: [React Library TW](https://docs.trustlesswork.com/trustless-work/react-library/getting-started) and [Types TW](https://docs.trustlesswork.com/trustless-work/developer-resources/types)
+This prompt will help you implement a global state management solution to store and access escrow data across your application. You should attach these links as docs reference: [React SDK TW](https://docs.trustlesswork.com/trustless-work/escrow-react-sdk/getting-started) and [Types TW](https://docs.trustlesswork.com/trustless-work/introduction/developer-resources/types)
 
 ```markdown
 Update the useInitializeEscrow implementation to handle the full response from sendTransaction.
@@ -135,7 +137,7 @@ Update the useInitializeEscrow implementation to handle the full response from s
 
 ### 5 - Fund Escrow
 
-This prompt will guide you through implementing the fund escrow feature using the Trustless Work library in your Next.js application. You should attach these links as docs reference: [React Library TW](https://docs.trustlesswork.com/trustless-work/react-library/getting-started) and [Types TW](https://docs.trustlesswork.com/trustless-work/developer-resources/types)
+This prompt will guide you through implementing the fund escrow feature using the Trustless Work library in your Next.js application. You should attach these links as docs reference: [React SDK TW](https://docs.trustlesswork.com/trustless-work/escrow-react-sdk/getting-started) and [Types TW](https://docs.trustlesswork.com/trustless-work/introduction/developer-resources/types)
 
 ```markdown
 Implement the useFundEscrow hook from the Trustless Work React library to fund an existing escrow contract.
@@ -156,7 +158,7 @@ Implement the useFundEscrow hook from the Trustless Work React library to fund a
 
 ### 6 - Change Milestone Status
 
-This prompt will guide you through implementing the functionality to change milestone statuses in an escrow contract using the Trustless Work library. You should attach these links as docs reference: [React Library TW](https://docs.trustlesswork.com/trustless-work/react-library/getting-started) and [Types TW](https://docs.trustlesswork.com/trustless-work/developer-resources/types)
+This prompt will guide you through implementing the functionality to change milestone statuses in an escrow contract using the Trustless Work library. You should attach these links as docs reference: [React SDK TW](https://docs.trustlesswork.com/trustless-work/escrow-react-sdk/getting-started) and [Types TW](https://docs.trustlesswork.com/trustless-work/introduction/developer-resources/types)
 
 ```markdown
 Implement the useChangeMilestoneStatus hook from the Trustless Work React library to update milestone statuses in the multi-release escrow.
@@ -175,7 +177,7 @@ Implement the useChangeMilestoneStatus hook from the Trustless Work React librar
 
 ### 7 - Approve Milestone
 
-This prompt will guide you through implementing the approve milestone feature in your escrow workflow using the Trustless Work library. You should attach these links as docs reference: [React Library TW](https://docs.trustlesswork.com/trustless-work/react-library/getting-started) and [Types TW](https://docs.trustlesswork.com/trustless-work/developer-resources/types)
+This prompt will guide you through implementing the approve milestone feature in your escrow workflow using the Trustless Work library. You should attach these links as docs reference: [React SDK TW](https://docs.trustlesswork.com/trustless-work/escrow-react-sdk/getting-started) and [Types TW](https://docs.trustlesswork.com/trustless-work/introduction/developer-resources/types)
 
 ```markdown
 Implement the useApproveMilestone hook from the Trustless Work React library to approve milestones in the multi-release escrow.
@@ -193,7 +195,7 @@ Implement the useApproveMilestone hook from the Trustless Work React library to 
 
 ### 8 - Release Funds
 
-This prompt will guide you through implementing the release funds feature in your escrow workflow using the Trustless Work library. This function allows clients to release funds to freelancers after milestone approval. You should attach these links as docs reference: [React Library TW](https://docs.trustlesswork.com/trustless-work/react-library/getting-started) and [Types TW](https://docs.trustlesswork.com/trustless-work/developer-resources/types)
+This prompt will guide you through implementing the release funds feature in your escrow workflow using the Trustless Work library. This function allows clients to release funds to freelancers after milestone approval. You should attach these links as docs reference: [React SDK TW](https://docs.trustlesswork.com/trustless-work/escrow-react-sdk/getting-started) and [Types TW](https://docs.trustlesswork.com/trustless-work/introduction/developer-resources/types)
 
 ```markdown
 Implement the useReleaseFunds hook from the Trustless Work React library to release funds for approved milestones in the multi-release escrow.
@@ -211,7 +213,7 @@ Implement the useReleaseFunds hook from the Trustless Work React library to rele
 
 ### 9 - Start Dispute
 
-This prompt will guide you through implementing the start dispute feature in your escrow workflow using the Trustless Work library. This functionality allows parties to initiate a dispute process when disagreements arise. You should attach these links as docs reference: [React Library TW](https://docs.trustlesswork.com/trustless-work/react-library/getting-started) and [Types TW](https://docs.trustlesswork.com/trustless-work/developer-resources/types)
+This prompt will guide you through implementing the start dispute feature in your escrow workflow using the Trustless Work library. This functionality allows parties to initiate a dispute process when disagreements arise. You should attach these links as docs reference: [React SDK TW](https://docs.trustlesswork.com/trustless-work/escrow-react-sdk/getting-started) and [Types TW](https://docs.trustlesswork.com/trustless-work/introduction/developer-resources/types)
 
 ```markdown
 Implement the useStartDispute hook from the Trustless Work React library to initiate disputes in the multi-release escrow.
@@ -229,7 +231,7 @@ Implement the useStartDispute hook from the Trustless Work React library to init
 
 ### 10 - Resolve Dispute
 
-This prompt will guide you through implementing the resolve dispute feature in your escrow workflow using the Trustless Work library. This advanced functionality allows the arbiter to make a final decision on disputes, allocating funds accordingly. You should attach these links as docs reference: [React Library TW](https://docs.trustlesswork.com/trustless-work/react-library/getting-started) and [Types TW](https://docs.trustlesswork.com/trustless-work/developer-resources/types)
+This prompt will guide you through implementing the resolve dispute feature in your escrow workflow using the Trustless Work library. This advanced functionality allows the arbiter to make a final decision on disputes, allocating funds accordingly. You should attach these links as docs reference: [React SDK TW](https://docs.trustlesswork.com/trustless-work/escrow-react-sdk/getting-started) and [Types TW](https://docs.trustlesswork.com/trustless-work/introduction/developer-resources/types)
 
 ```markdown
 Implement the useResolveDispute hook from the Trustless Work React library to resolve disputes in the multi-release escrow.
