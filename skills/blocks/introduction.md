@@ -1,65 +1,109 @@
 # Blocks SDK Introduction
 
-The Trustless Work Blocks SDK provides pre-built UI components, providers, and TanStack Query hooks for quickly building escrow management interfaces.
+The Trustless Work Blocks SDK (`@trustless-work/blocks`) provides pre-built UI components, providers, and TanStack Query hooks for quickly building escrow management interfaces.
 
 ## What You Get
 
 - **UI Blocks**: Cards, tables, dialogs, forms to list and manage escrows
 - **Providers**: API config, wallet context, dialogs, and amount formatting
 - **TanStack Query Hooks**: For fetching and mutating escrows
-- **Wallet-kit Helpers**: Wallet integration utilities
+- **Wallet-kit Integration**: Stellar wallet connectivity via `@creit.tech/stellar-wallets-kit`
 - **Error Handling**: Built-in error handling utilities
 
-## Installation
+## Dependencies
+
+The Blocks SDK bundles or expects these libraries:
+
+- `react-hook-form` — Form management
+- `zod` — TypeScript-first schema validation
+- `@trustless-work/escrow` — Core escrow SDK
+- `@tanstack/react-query` — Data-fetching and caching
+- `@tanstack/react-query-devtools` — React Query devtools
+- `@hookform/resolvers` — Zod + react-hook-form integration
+- `@creit.tech/stellar-wallets-kit` — Stellar wallet connection
+- `axios` — HTTP client
+- `@tanstack/react-table` — Headless table library
+- `react-day-picker` — Date picker component
+- `recharts` — Charting library
+
+## Quick Setup (Recommended)
+
+### 1. Install
 
 ```bash
 npm install @trustless-work/blocks
 ```
 
-## Resources
+### 2. Run the CLI Init
 
-- [Blocks Playground](https://blocks.trustlesswork.com/blocks)
-- [GitHub Repository](https://github.com/Trustless-Work/react-library-trustless-work-blocks)
-- [NPM Package](https://www.npmjs.com/package/@trustless-work/blocks)
+```bash
+npx trustless-work init
+```
 
-## List Available Blocks
+**What `init` does:**
+- Installs `shadcn/ui` components (with interactive prompts)
+- Installs all required dependencies (listed above)
+- Creates `.twblocks.json` configuration file
+- Optionally wires providers into `app/layout.tsx`
 
-Use the CLI to discover all available blocks:
+### 3. Set Environment Variable
+
+```bash
+# .env.local
+NEXT_PUBLIC_API_KEY=your_api_key_here
+```
+
+> Read-only calls can work without an API key. Write flows require a valid key.
+
+### 4. Add Modules
+
+```bash
+# Core modules (run once)
+npx trustless-work add wallet-kit
+npx trustless-work add providers
+npx trustless-work add tanstack
+npx trustless-work add helpers
+npx trustless-work add handle-errors
+
+# Escrow lifecycle blocks
+npx trustless-work add escrows/single-release
+npx trustless-work add escrows/multi-release
+npx trustless-work add escrows/single-multi-release
+
+# Listings
+npx trustless-work add escrows/escrows-by-role/cards
+# optional:
+# npx trustless-work add escrows/escrows-by-role/table
+# npx trustless-work add escrows/escrows-by-signer/cards
+# npx trustless-work add escrows/escrows-by-signer/table
+```
+
+### 5. Discover All Available Blocks
 
 ```bash
 npx trustless-work list
 ```
 
-This prints all available folder paths for `npx trustless-work add ...`.
+## Provider Stack (Order is Critical)
 
-## Installation Methods
-
-### Install by Folder Path
-
-Install entire folders (and all child blocks) with one command:
-
-```bash
-# Install all escrow blocks
-npx trustless-work add escrows
-
-# Install only single-release escrow blocks
-npx trustless-work add escrows/single-release
-
-# Install specific component
-npx trustless-work add escrows/escrows-by-role/table
-# or
-npx trustless-work add escrows/escrows-by-role/cards
+```tsx
+// app/layout.tsx
+<ReactQueryClientProvider>
+  <TrustlessWorkProvider>
+    <WalletProvider>
+      <EscrowProvider>
+        <EscrowDialogsProvider>
+          <EscrowAmountProvider>
+            {children}
+          </EscrowAmountProvider>
+        </EscrowDialogsProvider>
+      </EscrowProvider>
+    </WalletProvider>
+  </TrustlessWorkProvider>
+</ReactQueryClientProvider>
 ```
 
-**Tip**: Start broad (`escrows`), then narrow down as needed (`escrows/single-release/...`).
-
-### Install TanStack Query
-
-Add TanStack Query to your app:
-
-```bash
-npx trustless-work add tanstack
-```
+See [providers.md](providers.md) for full setup details.
 
 ## Context API
 
@@ -67,107 +111,57 @@ The Blocks SDK uses a Context API for global escrow state management.
 
 ### EscrowContext
 
-The `EscrowContext` provides utilities for managing escrow state:
+```tsx
+import { useEscrowContext } from '@trustless-work/blocks';
+
+function MyComponent() {
+  const { selectedEscrow, setSelectedEscrow, updateEscrow } = useEscrowContext();
+}
+```
 
 - `selectedEscrow`: Currently selected escrow
-- `setSelectedEscrow`: Set the selected escrow
-- `updateEscrow`: Update the selected escrow in context
+- `setSelectedEscrow`: Set the selected escrow (when clicking a card/row)
+- `updateEscrow`: Update the selected escrow in context (after mutations)
 
-### How Context is Used
+### How It's Used
 
-Endpoint hooks read from `selectedEscrow` to extract data like `contractId`, roles, etc. UI blocks use `setSelectedEscrow` to store the selected escrow when opening details dialogs.
+Endpoint hooks read from `selectedEscrow` to extract data like `contractId`, roles, etc. UI blocks use `setSelectedEscrow` to store the selected escrow when opening detail dialogs.
 
-**Example: Using selectedEscrow**
-
-```tsx
-import { useEscrowContext } from '@trustless-work/blocks';
-
-function ChangeMilestoneStatus() {
-  const { selectedEscrow } = useEscrowContext();
-
-  const handleSubmit = async (payload) => {
-    const finalPayload = {
-      contractId: selectedEscrow?.contractId || '',
-      milestoneIndex: payload.milestoneIndex,
-      newStatus: payload.status,
-      serviceProvider: walletAddress || '',
-    };
-
-    await changeMilestoneStatus.mutateAsync({
-      payload: finalPayload,
-      type: selectedEscrow?.type || 'multi-release',
-      address: walletAddress || '',
-    });
-  };
-}
-```
-
-**Example: Setting selectedEscrow**
+## First Page Example
 
 ```tsx
-import { useEscrowContext } from '@trustless-work/blocks';
+// app/page.tsx
+"use client";
 
-function EscrowsCards() {
-  const { setSelectedEscrow } = useEscrowContext();
+import { WalletButton } from "@/components/tw-blocks/wallet-kit/WalletButtons";
+import { InitializeEscrowDialog } from "@/components/tw-blocks/escrows/single-release/initialize-escrow/dialog/InitializeEscrow";
+import { EscrowsByRoleCards } from "@/components/tw-blocks/escrows/escrows-by-role/cards/EscrowsCards";
 
-  const onCardClick = (escrow: Escrow) => {
-    setSelectedEscrow(escrow);
-    dialogStates.second.setIsOpen(true);
-  };
-}
-```
-
-**Example: Updating escrow**
-
-```tsx
-import { useEscrowContext } from '@trustless-work/blocks';
-
-function UpdateMilestone() {
-  const { selectedEscrow, updateEscrow } = useEscrowContext();
-
-  const handleSubmit = async (payload) => {
-    await changeMilestoneStatus.mutateAsync({
-      payload: finalPayload,
-      type: selectedEscrow?.type || 'multi-release',
-      address: walletAddress || '',
-    });
-
-    // Update the selected escrow in context
-    updateEscrow({
-      ...selectedEscrow,
-      milestones: selectedEscrow?.milestones.map((milestone, index) => {
-        if (index === Number(payload.milestoneIndex)) {
-          return {
-            ...milestone,
-            status: payload.status,
-            evidence: payload.evidence || undefined,
-          };
-        }
-        return milestone;
-      }),
-    });
-  };
+export default function Home() {
+  return (
+    <div className="container mx-auto py-8">
+      <header className="flex justify-between items-center mb-8">
+        <h2 className="text-2xl font-bold">Trustless Work</h2>
+        <WalletButton />
+      </header>
+      <div className="flex justify-end mb-4">
+        <InitializeEscrowDialog />
+      </div>
+      <EscrowsByRoleCards />
+    </div>
+  );
 }
 ```
 
 ## Customization
 
-{% hint style="info" %}
-Want to customize the blocks?
+All blocks are fully customizable. After installation with `npx trustless-work add <module>`, edit the generated components in `components/tw-blocks/` however you want.
 
-Edit the generated components however you want.
-{% endhint %}
+## Resources
 
-All blocks are fully customizable. After installation, you can modify the generated components to match your design system.
-
-## Alternative State Management
-
-You don't have to use the Context API approach. You can use:
-- Redux
-- Zustand
-- Any other state management solution
-
-Just ensure the target escrow data is available to each endpoint hook.
+- [Blocks Playground](https://blocks.trustlesswork.com/blocks)
+- [GitHub Repository](https://github.com/Trustless-Work/react-library-trustless-work-blocks)
+- [NPM Package](https://www.npmjs.com/package/@trustless-work/blocks)
 
 ## Next Steps
 
