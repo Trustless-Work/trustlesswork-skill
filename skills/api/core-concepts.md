@@ -2,7 +2,7 @@
 
 ## Overview
 
-Trustless Work enables trust-minimized conditional payments on Stellar blockchain using Soroban smart contracts. It's ideal for freelancing, gig work, and milestone-based projects.
+Trustless Work is **Escrow-as-a-Service (EaaS)** for stablecoin escrow. It enables trust-minimized conditional payments on Stellar blockchain using Soroban smart contracts. Build **non-custodial** flows with milestones, approvals, and disputes. Ideal for freelancing, marketplaces, grant disbursements, and any milestone-based payment flow.
 
 ## Escrow Lifecycle
 
@@ -10,97 +10,97 @@ Trustless Work enables trust-minimized conditional payments on Stellar blockchai
 
 1. **Deploy**: Initialize escrow with roles, milestones, and configuration
 2. **Fund**: Lock funds (escrow amount + platform fee) in escrow account
-3. **Complete Milestone**: Service provider marks milestone(s) as complete
+3. **Update Milestone Status**: Service provider marks milestone(s) as complete, adds evidence
 4. **Approve**: Approver verifies and approves milestone(s)
-5. **Release**: Funds released to Service Provider or Receiver (single payment)
-6. **Dispute** (optional): Any party can initiate dispute
-7. **Resolve**: Dispute Resolver decides release or refund
+5. **Release**: Release Signer releases all funds at once to Receiver
+6. **Dispute** (optional): Service Provider, Approver, or Release Signer can raise a dispute
+7. **Resolve**: Dispute Resolver decides how to distribute funds
 
 ### Multi-Release Escrow Flow
 
-1. **Deploy**: Initialize escrow with roles and milestones
+1. **Deploy**: Initialize escrow with roles and milestones (each with its own amount and receiver)
 2. **Fund**: Lock total funds (sum of all milestone amounts + platform fee)
-3. **Complete Milestone**: Service provider marks milestone as complete
+3. **Update Milestone Status**: Service provider marks a milestone as complete
 4. **Approve**: Approver verifies and approves milestone
-5. **Release**: Funds for that milestone released immediately
+5. **Release Milestone**: Release Signer releases funds for that specific milestone
 6. **Repeat**: Steps 3-5 for each milestone
 7. **Withdraw Remaining**: Dispute Resolver can withdraw remaining funds after completion
 
 ## Key Roles
 
-### Required Roles
+### Core Roles
 
-- **Payer/Signer**: Funds the escrow, signs deployment transaction
-- **Service Provider**: Delivers deliverables, marks milestones complete
-- **Approver**: Verifies deliverables, approves milestones for release
-- **Dispute Resolver**: Intervenes in disagreements, decides release/refund
+| Role | Responsibility |
+|------|---------------|
+| **Service Provider** | Delivers work, updates milestone status, adds evidence |
+| **Approver** | Validates completion, approves milestones, can raise disputes |
+| **Release Signer** | Executes fund releases after approvals, can raise disputes |
+| **Receiver** | Final recipient of released funds (defaults to Service Provider) |
+| **Dispute Resolver** | Resolves disputes by redirecting funds |
+| **Platform Address** | Receives platform fees; can update escrow before funding |
 
-### Optional Roles
+### Role Capability Matrix
 
-- **Receiver**: Final recipient of funds (defaults to Service Provider if not specified)
-- **Release Signer**: Executes release/refund transactions (platform role)
+| Role | Update status | Approve | Raise dispute | Resolve | Release | Receive payout | Receive fee |
+|------|-------------|---------|--------------|---------|---------|---------------|------------|
+| Service Provider | Yes | No | Yes | No | No | Sometimes | No |
+| Approver | No | Yes | Yes | No | No | Usually no | No |
+| Release Signer | No | No | Yes | No | Yes | Usually no | No |
+| Receiver | No | No | No | No | No | Yes | No |
+| Dispute Resolver | No | Case-specific | No | Yes | Case-specific | No | No |
+| Platform Address | No (before funding: Yes) | No | No | No | No | No | Yes |
 
-### Role Structure
+### Important Distinctions
 
-```typescript
-interface Role {
-  address: string;  // Stellar account address
-  type: 'payer' | 'serviceProvider' | 'approver' | 'disputeResolver' | 'receiver' | 'releaseSigner';
-}
-```
-
-**Example:**
-```json
-{
-  "roles": [
-    {
-      "address": "GABC123...",
-      "type": "payer"
-    },
-    {
-      "address": "GDEF456...",
-      "type": "serviceProvider"
-    },
-    {
-      "address": "GGHI789...",
-      "type": "approver"
-    },
-    {
-      "address": "GJKL012...",
-      "type": "disputeResolver"
-    }
-  ]
-}
-```
+- **Status update** = communicates progress (Service Provider)
+- **Approval** = validates completion (Approver)
+- **Release** = executes payment movement (Release Signer)
+- The same address can hold multiple roles (e.g., Approver + Release Signer), but avoid Service Provider + Approver (can approve own work)
 
 ## Escrow Flags
 
 Status tracked via boolean flags:
 
 - **approved**: Milestone(s) approved for release
-- **dispute**: Escrow is in dispute
+- **disputed**: Escrow is in dispute
 - **released**: Funds have been released
 - **resolved**: Dispute has been resolved
 
 ## API Authentication
 
-All API requests require an API key:
+All API requests require an API key header:
 
 ```
-Authorization: Bearer YOUR_API_KEY
+x-api-key: YOUR_API_KEY
 ```
 
 ### Getting an API Key
 
-1. Connect wallet to https://dapp.trustlesswork.com/dashboard
+1. Connect wallet to https://dapp.trustlesswork.com
 2. Click wallet address (bottom left)
-3. Go to Settings
-4. Complete profile (name, email, use case - **required**)
-5. Generate API key
+3. Go to Settings → API Keys tab
+4. Complete profile (name, email, use case — **required**)
+5. Choose network (Testnet or Mainnet) and generate API key
+6. **Copy immediately** — it cannot be viewed again after closing the dialog
 
-## Base URL
+## Base URLs
 
-Production: `https://api.trustlesswork.com`
+```
+Mainnet:  https://api.trustlesswork.com
+Testnet:  https://dev.api.trustlesswork.com
+```
+
+**Swagger UI:**
+- Mainnet: `https://api.trustlesswork.com/docs`
+- Testnet: `https://dev.api.trustlesswork.com/docs`
+
+## Rate Limits
+
+**50 requests per 60 seconds** per client.
+
+## Fees
+
+Mainnet charges a **0.3% protocol fee** on top of your platform fee.
 
 ## Common Error Types
 
@@ -123,10 +123,10 @@ enum ApiErrorTypes {
 
 ## Transaction Pattern
 
-All escrow operations follow this pattern:
+All escrow write operations follow this pattern:
 
 1. **Call API endpoint** → Returns unsigned XDR transaction
-2. **Sign transaction** → Use wallet to sign XDR
+2. **Sign transaction** → Use wallet to sign XDR with the correct role wallet
 3. **Submit transaction** → POST to `/helper/send-transaction` with signed XDR
 4. **Verify on-chain** → Query escrow with `validateOnChain=true`
 
@@ -134,38 +134,37 @@ All escrow operations follow this pattern:
 
 ```typescript
 // 1. Get unsigned transaction
-const response = await fetch('/deployer/single-release', {
+const response = await fetch('https://api.trustlesswork.com/deployer/single-release', {
   method: 'POST',
   headers: {
-    'Authorization': `Bearer ${apiKey}`,
+    'x-api-key': apiKey,
     'Content-Type': 'application/json'
   },
   body: JSON.stringify(deployPayload)
 });
 
-const { xdr } = await response.json();
+const { unsignedTransaction } = await response.json();
 
 // 2. Sign with wallet
-const signedXdr = await wallet.signTransaction(xdr);
+const { signedTxXdr } = await signTransaction(unsignedTransaction, {
+  address,
+  networkPassphrase: WalletNetwork.TESTNET,
+});
 
 // 3. Submit transaction
-const submitResponse = await fetch('/helper/send-transaction', {
+const submitResponse = await fetch('https://api.trustlesswork.com/helper/send-transaction', {
   method: 'POST',
   headers: {
-    'Authorization': `Bearer ${apiKey}`,
+    'x-api-key': apiKey,
     'Content-Type': 'application/json'
   },
-  body: JSON.stringify({ xdr: signedXdr })
+  body: JSON.stringify({ signedXdr: signedTxXdr })
 });
 
 // 4. Verify on-chain
 const verifyResponse = await fetch(
-  `/helper/get-escrow-by-contract-ids?contractIds=${contractId}&validateOnChain=true`,
-  {
-    headers: {
-      'Authorization': `Bearer ${apiKey}`
-    }
-  }
+  `https://api.trustlesswork.com/helper/get-escrows-by-signer?signer=${signerAddress}&validateOnChain=true`,
+  { headers: { 'x-api-key': apiKey } }
 );
 ```
 
@@ -174,7 +173,7 @@ const verifyResponse = await fetch(
 ### Security
 
 1. **Never expose API keys** in client-side code or public repos
-2. **Use environment variables** for all sensitive configuration
+2. **Use environment variables**: `NEXT_PUBLIC_API_KEY` for frontend (read-only acceptable), server-side for write flows
 3. **Validate on-chain** when displaying escrow data (`validateOnChain=true`)
 4. **Verify transaction signatures** before submitting
 5. **Handle errors gracefully** with user-friendly messages
@@ -182,36 +181,33 @@ const verifyResponse = await fetch(
 ### Error Handling
 
 ```typescript
+import axios from "axios";
+
+const http = axios.create({
+  baseURL: "https://dev.api.trustlesswork.com", // or https://api.trustlesswork.com for mainnet
+  timeout: 10000,
+  headers: {
+    "Content-Type": "application/json",
+    "x-api-key": process.env.NEXT_PUBLIC_API_KEY,
+  },
+});
+
 async function callTrustlessWorkAPI(endpoint: string, options: RequestInit) {
   try {
-    const response = await fetch(`https://api.trustlesswork.com${endpoint}`, {
-      ...options,
-      headers: {
-        'Authorization': `Bearer ${process.env.TRUSTLESS_WORK_API_KEY}`,
-        'Content-Type': 'application/json',
-        ...options.headers
-      }
-    });
-
-    if (!response.ok) {
-      const error = await response.json().catch(() => ({ message: 'Unknown error' }));
-      
-      switch (response.status) {
-        case 401:
-          throw new Error('Invalid API key. Check your API key in settings.');
-        case 404:
-          throw new Error('Escrow not found');
-        case 429:
-          throw new Error('Rate limit exceeded. Please try again later.');
-        default:
-          throw new Error(error.message || `API error: ${response.status}`);
-      }
+    const response = await http.post(endpoint, options);
+    return response.data;
+  } catch (error: any) {
+    const status = error.response?.status;
+    switch (status) {
+      case 401:
+        throw new Error('Invalid API key. Check your API key in settings.');
+      case 404:
+        throw new Error('Escrow not found');
+      case 429:
+        throw new Error('Rate limit exceeded. Please try again later.');
+      default:
+        throw new Error(error.response?.data?.message || `API error: ${status}`);
     }
-
-    return await response.json();
-  } catch (error) {
-    console.error('Trustless Work API Error:', error);
-    throw error;
   }
 }
 ```
