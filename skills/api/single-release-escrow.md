@@ -106,7 +106,7 @@ interface SingleReleaseContract {
     }
   ],
   "trustline": {
-    "address": "CBIELTK6YBZJU5UP2WWQEUCYKLPU6AUNZ2BQ4WWFEIE3USCIHMXQDAMA",
+    "address": "GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN",
     "symbol": "USDC"
   }
 }
@@ -176,7 +176,7 @@ export const deployEscrow = async () => {
         { description: "Backend integration" },
       ],
       trustline: {
-        address: "CBIELTK6YBZJU5UP2WWQEUCYKLPU6AUNZ2BQ4WWFEIE3USCIHMXQDAMA",
+        address: "GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN",
         symbol: "USDC",
       },
     }
@@ -903,7 +903,7 @@ interface UpdateSingleReleaseEscrow {
     "isActive": true,
     "receiverMemo": 0,
     "trustline": {
-      "address": "CBIELTK6YBZJU5UP2WWQEUCYKLPU6AUNZ2BQ4WWFEIE3USCIHMXQDAMA"
+      "address": "GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN"
     }
   }
 }
@@ -1020,7 +1020,7 @@ async function singleReleaseWorkflow() {
       { description: "Testing and deployment" },
     ],
     trustline: {
-      address: "CBIELTK6YBZJU5UP2WWQEUCYKLPU6AUNZ2BQ4WWFEIE3USCIHMXQDAMA",
+      address: "GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN",
       symbol: "USDC",
     },
   });

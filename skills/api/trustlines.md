@@ -21,17 +21,19 @@ A trustline is an explicit opt-in configuration that authorizes a Stellar accoun
 
 ### USDC (Circle)
 
+The `address` field is always the **issuer address (starts with G)**, not the Soroban contract address (starts with C). The API resolves the Soroban contract internally from the issuer + symbol.
+
 ```typescript
-// Testnet
+// Testnet issuer
 {
   address: "GBBD47IF6LWK7P7MDEVSCWR7DPUWV3NY3DTQEVFL4NAT4AQH3ZLLFLA5",
   symbol: "USDC",
   decimals: 7
 }
 
-// Mainnet
+// Mainnet issuer
 {
-  address: "CBIELTK6YBZJU5UP2WWQEUCYKLPU6AUNZ2BQ4WWFEIE3USCIHMXQDAMA",
+  address: "GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN",
   symbol: "USDC",
   decimals: 7
 }
@@ -151,7 +153,7 @@ export const TRUSTLINES = {
     decimals: 7,
   },
   USDC_MAINNET: {
-    address: "CBIELTK6YBZJU5UP2WWQEUCYKLPU6AUNZ2BQ4WWFEIE3USCIHMXQDAMA",
+    address: "GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN",
     symbol: "USDC",
     decimals: 7,
   },

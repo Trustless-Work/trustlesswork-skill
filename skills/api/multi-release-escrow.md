@@ -114,7 +114,7 @@ interface MultiReleaseContract {
     }
   ],
   "trustline": {
-    "address": "CBIELTK6YBZJU5UP2WWQEUCYKLPU6AUNZ2BQ4WWFEIE3USCIHMXQDAMA",
+    "address": "GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN",
     "symbol": "USDC"
   }
 }
@@ -195,7 +195,7 @@ export const deployMultiReleaseEscrow = async () => {
       },
     ],
     trustline: {
-      address: "CBIELTK6YBZJU5UP2WWQEUCYKLPU6AUNZ2BQ4WWFEIE3USCIHMXQDAMA",
+      address: "GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN",
       symbol: "USDC",
     },
   });
@@ -949,7 +949,7 @@ async function multiReleaseWorkflow() {
       },
     ],
     trustline: {
-      address: "CBIELTK6YBZJU5UP2WWQEUCYKLPU6AUNZ2BQ4WWFEIE3USCIHMXQDAMA",
+      address: "GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN",
       symbol: "USDC",
     },
   });
