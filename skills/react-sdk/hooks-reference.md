@@ -798,5 +798,6 @@ const response = await sendTransaction(signedXdr);
 
 ## Resources
 
-- [React SDK Documentation](https://docs.trustlesswork.com/trustless-work/escrow-react-sdk/escrows)
+- [React SDK Documentation](https://docs.trustlesswork.com/trustless-work/escrow-react-sdk/getting-started)
+- [Hook Reference](https://docs.trustlesswork.com/trustless-work/escrow-react-sdk/escrows)
 - [TypeScript Types](https://docs.trustlesswork.com/trustless-work/introduction/developer-resources/types)
