@@ -51,11 +51,10 @@ npx trustless-work init
 Create `.env.local` (reads can work without a key; write flows need it):
 
 ```bash
-# Required for authenticated calls (when you start acting)
 NEXT_PUBLIC_API_KEY=your_api_key_here
 ```
 
-> Get your API key in the dApp when ready to move beyond read-only dev flows.
+> Get your API key at https://dapp.trustlesswork.com → Settings → API Keys. Fill in name, email, and use case first.
 
 ## Provider Stack (Order is Critical)
 
