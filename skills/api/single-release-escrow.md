@@ -986,11 +986,11 @@ export const updateEscrow = async (
 import axios from "axios";
 
 const http = axios.create({
-  baseURL: "https://api.trustlesswork.com",
+  baseURL: "https://dev.api.trustlesswork.com", // or https://api.trustlesswork.com for mainnet
   timeout: 10000,
   headers: {
     "Content-Type": "application/json",
-    "x-api-key": process.env.TRUSTLESS_WORK_API_KEY,
+    "x-api-key": process.env.NEXT_PUBLIC_API_KEY,
   },
 });
 
