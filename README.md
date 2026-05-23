@@ -19,59 +19,6 @@ git clone https://github.com/Trustless-Work/trustless-work-dev-skill.git
 cp -r trustless-work-dev-skill ~/.cursor/skills/trustless-work-dev
 ```
 
-## MCP Integration
-
-For the best experience, pair this skill with the [Trustless Work MCP servers](https://docs.trustlesswork.com/trustless-work/ai/mcp). MCP lets your AI assistant read live documentation and trigger escrow workflows directly from the editor.
-
-### Two servers
-
-| Server | URL | Purpose |
-| --- | --- | --- |
-| `trustlesswork-docs` | `https://docs.trustlesswork.com/trustless-work/~gitbook/mcp` | Search and read Trustless Work documentation |
-| `trustlesswork` | `https://mcp.trustlesswork.com/mcp` | Escrow tools and live operations |
-
-Use the docs server for answers and code generation. Use the product server for escrow actions and live operations.
-
-### Setup in Cursor
-
-1. Open **Cursor → Settings → MCP → Tools/MCP**
-2. Click **Add New MCP Server** (Cursor opens or creates `mcp.json`)
-3. Paste the configuration below and save
-
-```json
-{
-  "mcpServers": {
-    "trustlesswork-docs": {
-      "type": "streamable-http",
-      "url": "https://docs.trustlesswork.com/trustless-work/~gitbook/mcp",
-      "headers": {}
-    },
-    "trustlesswork": {
-      "type": "streamable-http",
-      "url": "https://mcp.trustlesswork.com/mcp",
-      "headers": {}
-    }
-  }
-}
-```
-
-4. Go to **Settings → MCP → MCP Servers** and confirm both show **Connected**
-5. Open a new chat in **Agent Mode** and ask Cursor to work with Trustless Work
-
-Example prompts:
-
-- `Create a new multi-release escrow with the SDK.`
-- `Generate code to call the changeMilestoneStatus endpoint.`
-- `Show me how to sign a transaction for releaseFunds.`
-
-### Troubleshooting
-
-- Place `mcp.json` in your project root if the server does not appear
-- URLs must have **no trailing slash** and `type` must be `streamable-http`
-- Enable **Agent Mode** and reload Cursor if tools are not detected
-
-Full setup guide with screenshots: [MCP documentation](https://docs.trustlesswork.com/trustless-work/ai/mcp)
-
 ## Structure
 
 ```
@@ -220,6 +167,59 @@ npx trustless-work add escrows/escrows-by-signer/table
 - **[skills/blocks/components.md](skills/blocks/components.md)** - Available UI components and usage examples
 - **[skills/blocks/providers.md](skills/blocks/providers.md)** - Provider setup and configuration
 - **[skills/blocks/hooks.md](skills/blocks/hooks.md)** - TanStack Query hooks for fetching and mutating escrows
+
+## MCP Integration
+
+For the best experience, pair this skill with the [Trustless Work MCP servers](https://docs.trustlesswork.com/trustless-work/ai/mcp). MCP lets your AI assistant read live documentation and trigger escrow workflows directly from the editor.
+
+### Two servers
+
+| Server | URL | Purpose |
+| --- | --- | --- |
+| `trustlesswork-docs` | `https://docs.trustlesswork.com/trustless-work/~gitbook/mcp` | Search and read Trustless Work documentation |
+| `trustlesswork` | `https://mcp.trustlesswork.com/mcp` | Escrow tools and live operations |
+
+Use the docs server for answers and code generation. Use the product server for escrow actions and live operations.
+
+### Setup in Cursor
+
+1. Open **Cursor → Settings → MCP → Tools/MCP**
+2. Click **Add New MCP Server** (Cursor opens or creates `mcp.json`)
+3. Paste the configuration below and save
+
+```json
+{
+  "mcpServers": {
+    "trustlesswork-docs": {
+      "type": "streamable-http",
+      "url": "https://docs.trustlesswork.com/trustless-work/~gitbook/mcp",
+      "headers": {}
+    },
+    "trustlesswork": {
+      "type": "streamable-http",
+      "url": "https://mcp.trustlesswork.com/mcp",
+      "headers": {}
+    }
+  }
+}
+```
+
+4. Go to **Settings → MCP → MCP Servers** and confirm both show **Connected**
+5. Open a new chat in **Agent Mode** and ask Cursor to work with Trustless Work
+
+Example prompts:
+
+- `Create a new multi-release escrow with the SDK.`
+- `Generate code to call the changeMilestoneStatus endpoint.`
+- `Show me how to sign a transaction for releaseFunds.`
+
+### Troubleshooting
+
+- Place `mcp.json` in your project root if the server does not appear
+- URLs must have **no trailing slash** and `type` must be `streamable-http`
+- Enable **Agent Mode** and reload Cursor if tools are not detected
+
+Full setup guide with screenshots: [MCP documentation](https://docs.trustlesswork.com/trustless-work/ai/mcp)
 
 ## Resources
 
