@@ -23,7 +23,6 @@
   "author": "Trustless Work",
   "license": "Apache-2.0",
   "files": [
-    "SKILL.md",
     "README.md",
     "CONTRIBUTING.md",
     "CODE_OF_CONDUCT.md",
