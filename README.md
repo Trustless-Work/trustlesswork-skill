@@ -1,3 +1,5 @@
+<img width="1400" height="350" alt="banner" src="https://github.com/user-attachments/assets/5f06304f-e021-4fea-a4de-96738e613038" />
+
 # Trustless Work Development Skill
 
 A comprehensive AI skill for developing with the Trustless Work platform - enabling escrow contracts, milestone-based payments, and dispute resolution on the Stellar blockchain.
