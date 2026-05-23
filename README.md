@@ -2,6 +2,8 @@
 
 # Trustless Work Development Skill
 
+[View on skills.sh](https://www.skills.sh/trustless-work/trustless-work-dev-skill)
+
 A comprehensive AI skill for developing with the Trustless Work platform - enabling escrow contracts, milestone-based payments, and dispute resolution on the Stellar blockchain.
 
 ## Installation
@@ -9,7 +11,7 @@ A comprehensive AI skill for developing with the Trustless Work platform - enabl
 Install this skill using:
 
 ```bash
-npx skills add https://github.com/Trustless-Work/trustless-work-dev-skill
+npx skills add trustless-work/trustless-work-dev-skill
 ```
 
 Or manually:

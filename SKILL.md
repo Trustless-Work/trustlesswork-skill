@@ -17,11 +17,21 @@ allowed-tools: mcp__trustless-work__searchDocumentation mcp__trustless-work__get
 
 # Trustless Work Development Skill
 
+[View on skills.sh](https://www.skills.sh/trustless-work/trustless-work-dev-skill)
+
 This skill provides comprehensive guidance for integrating Trustless Work escrow contracts into applications. Use the reference files below for detailed implementation guides.
 
 ## Quick Start
 
-When working with Trustless Work:
+### Installation
+
+Install this skill using:
+
+```bash
+npx skills add trustless-work/trustless-work-dev-skill
+```
+
+### When working with Trustless Work:
 
 1. **Configure MCP (recommended)** — See [MCP Integration](#mcp-integration) below for live docs and escrow tools
 2. **Understand core concepts** - See [skills/api/core-concepts.md](skills/api/core-concepts.md)
