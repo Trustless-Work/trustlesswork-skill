@@ -101,6 +101,8 @@ Use the MCP tools when reference files don't cover a specific endpoint or featur
 - `mcp__trustless-work__getPage` — retrieve a specific documentation page
 
 Other resources:
-- Backoffice dApp: https://dapp.trustlesswork.com
-- Demo dApp: https://demo.trustlesswork.com
-- Blocks Playground: https://blocks.trustlesswork.com/blocks
+- Documentation: https://docs.trustlesswork.com
+- Backoffice: https://dapp.trustlesswork.com
+- 
+- Escrow Lab: https://demo.trustlesswork.com
+- Escrow Blocks: https://blocks.trustlesswork.com/blocks
