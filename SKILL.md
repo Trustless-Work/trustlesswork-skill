@@ -23,16 +23,17 @@ This skill provides comprehensive guidance for integrating Trustless Work escrow
 
 When working with Trustless Work:
 
-1. **Understand core concepts** - See [skills/api/core-concepts.md](skills/api/core-concepts.md)
-2. **Choose escrow type**:
+1. **Configure MCP (recommended)** — See [MCP Integration](#mcp-integration) below for live docs and escrow tools
+2. **Understand core concepts** - See [skills/api/core-concepts.md](skills/api/core-concepts.md)
+3. **Choose escrow type**:
    - Single-release: One payment after all milestones - See [skills/api/single-release-escrow.md](skills/api/single-release-escrow.md)
    - Multi-release: Payments per milestone - See [skills/api/multi-release-escrow.md](skills/api/multi-release-escrow.md)
-3. **Configure trustlines** - See [skills/api/trustlines.md](skills/api/trustlines.md)
-4. **Choose integration method**:
+4. **Configure trustlines** - See [skills/api/trustlines.md](skills/api/trustlines.md)
+5. **Choose integration method**:
    - **REST API**: Direct API calls - See [skills/api/](skills/api/) folder
    - **React SDK**: Custom hooks for React/Next.js - See [skills/react-sdk/react-sdk.md](skills/react-sdk/react-sdk.md)
    - **Blocks SDK**: Pre-built UI components - See [skills/blocks/introduction.md](skills/blocks/introduction.md)
-5. **Implement workflow**: Deploy → Fund → Complete → Approve → Release
+6. **Implement workflow**: Deploy → Fund → Complete → Approve → Release
 
 ## Gotchas
 
@@ -94,15 +95,47 @@ Rate limit: **50 requests per 60 seconds**
 3. Submit via `/helper/send-transaction` → Broadcast to Stellar
 4. Verify on-chain → Query with `validateOnChain=true`
 
-## Live Documentation
+## MCP Integration
 
-Use the MCP tools when reference files don't cover a specific endpoint or feature:
-- `mcp__trustless-work__searchDocumentation` — search for any topic
+Pair this skill with the Trustless Work MCP servers for live documentation and escrow operations. Setup guide: https://docs.trustlesswork.com/trustless-work/ai/mcp
+
+Add both servers to `mcp.json` in the project root (Cursor → Settings → MCP → Add New MCP Server):
+
+```json
+{
+  "mcpServers": {
+    "trustlesswork-docs": {
+      "type": "streamable-http",
+      "url": "https://docs.trustlesswork.com/trustless-work/~gitbook/mcp",
+      "headers": {}
+    },
+    "trustlesswork": {
+      "type": "streamable-http",
+      "url": "https://mcp.trustlesswork.com/mcp",
+      "headers": {}
+    }
+  }
+}
+```
+
+| Server | When to use |
+| --- | --- |
+| `trustlesswork-docs` | Search docs, answer questions, generate SDK code when local reference files are insufficient |
+| `trustlesswork` | Trigger escrow actions and live operations from the editor |
+
+**Docs MCP tools** (use in Agent Mode when reference files don't cover a topic):
+- `mcp__trustless-work__searchDocumentation` — search documentation for any topic
 - `mcp__trustless-work__getPage` — retrieve a specific documentation page
 
-Other resources:
-- Documentation: https://docs.trustlesswork.com
-- Backoffice: https://dapp.trustlesswork.com
-- 
-- Escrow Lab: https://demo.trustlesswork.com
-- Escrow Blocks: https://blocks.trustlesswork.com/blocks
+Prefer local reference files in `skills/` first; fall back to MCP when you need the latest docs or a topic not covered here.
+
+If MCP tools are unavailable, remind the user to install both servers, enable Agent Mode, and confirm **Connected** status under Settings → MCP.
+
+## Resources
+
+- [Trustless Work Documentation](https://docs.trustlesswork.com)
+- [MCP Setup Guide](https://docs.trustlesswork.com/trustless-work/ai/mcp)
+- [Backoffice](https://dapp.trustlesswork.com)
+- [Escrow Lab](https://demo.trustlesswork.com)
+- [Escrow Blocks](https://blocks.trustlesswork.com/blocks)
+- [Swagger (Mainnet)](https://api.trustlesswork.com/docs)
