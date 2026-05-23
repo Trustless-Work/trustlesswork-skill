@@ -234,12 +234,6 @@ Full setup guide with screenshots: [MCP documentation](https://docs.trustlesswor
 - [Stellar Documentation](https://developers.stellar.org/)
 - [Soroban Documentation](https://soroban.stellar.org/docs)
 
-## Contributing
-
-Contributions welcome! Please read our [Contributing Guide](CONTRIBUTING.md) for details on how to contribute to this project.
-
-Please note that this project follows the [Contributor Covenant Code of Conduct](CODE_OF_CONDUCT.md). By participating, you are expected to uphold this code.
-
 ## License
 
 Apache-2.0
