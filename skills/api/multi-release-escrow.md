@@ -227,7 +227,7 @@ Deposit funds into an existing escrow contract. Amount should equal sum of all m
 interface FundEscrow {
   contractId: string;  // ID (address) that identifies the escrow contract
   signer: string;      // Entity that signs the transaction
-  amount: string;      // Amount to transfer to the escrow contract (sum of all milestone amounts + platform fee)
+  amount: number;      // Amount to transfer to the escrow contract (sum of all milestone amounts + platform fee)
 }
 ```
 
@@ -248,7 +248,7 @@ interface FundEscrow {
 {
   "contractId": "CHASVBD1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ",
   "signer": "GABC1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ",
-  "amount": "10200"
+  "amount": 10200
 }
 ```
 
@@ -286,7 +286,7 @@ const http = axios.create({
   },
 });
 
-export const fundEscrow = async (contractId: string, totalAmount: string) => {
+export const fundEscrow = async (contractId: string, totalAmount: number) => {
   const { address } = await kit.getAddress();
 
   const response = await http.post("/escrow/multi-release/fund-escrow", {
@@ -970,7 +970,7 @@ async function multiReleaseWorkflow() {
   const fundResponse = await http.post("/escrow/multi-release/fund-escrow", {
     contractId,
     signer: address,
-    amount: "10200",
+    amount: 10200,
   });
 
   const { unsignedTransaction: fundXdr } = fundResponse.data;
