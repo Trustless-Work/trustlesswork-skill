@@ -213,7 +213,7 @@ Deposit funds into an existing escrow contract.
 interface FundEscrow {
   contractId: string;  // ID (address) that identifies the escrow contract
   signer: string;      // Entity that signs the transaction that deploys and initializes the escrow
-  amount: string;      // Amount to transfer to the escrow contract
+  amount: number;      // Amount to transfer to the escrow contract
 }
 ```
 
@@ -234,7 +234,7 @@ interface FundEscrow {
 {
   "contractId": "CHASVBD1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ",
   "signer": "GABC1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ",
-  "amount": "5000"
+  "amount": 5000
 }
 ```
 
@@ -270,7 +270,7 @@ const http = axios.create({
   },
 });
 
-export const fundEscrow = async (contractId: string, amount: string) => {
+export const fundEscrow = async (contractId: string, amount: number) => {
   const { address } = await kit.getAddress();
 
   const response = await http.post("/escrow/single-release/fund-escrow", {
@@ -1041,7 +1041,7 @@ async function singleReleaseWorkflow() {
   const fundResponse = await http.post("/escrow/single-release/fund-escrow", {
     contractId,
     signer: address,
-    amount: "5000",
+    amount: 5000,
   });
 
   const { unsignedTransaction: fundXdr } = fundResponse.data;

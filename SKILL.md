@@ -49,7 +49,7 @@ npx skills add trustless-work/trustless-work-dev-skill
 
 These are the non-obvious facts that the agent will get wrong without being told:
 
-- **`amount` type differs by endpoint**: In `deploy` REST calls `amount` is a `number`. In `fund-escrow` REST calls `amount` is a `string`. React SDK's `FundEscrowPayload` uses `number`. Don't mix them.
+- **`amount` is always a `number`**: Across the entire integration — `deploy`, `fund-escrow`, milestone amounts, and React SDK's `FundEscrowPayload` — send `1000`, never `"1000"`.
 - **`milestoneIndex` is always a string**: Pass `"0"` not `0` — even though it looks numeric.
 - **Don't include `status` or `approvedFlag` in milestone objects when deploying**: Only `description` is valid on deploy. Adding those fields causes errors.
 - **Header is `x-api-key`**: Not `Authorization: Bearer`. This is the single most common auth mistake.

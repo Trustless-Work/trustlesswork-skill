@@ -171,7 +171,7 @@ const usdcTrustline = isTestnet ? TRUSTLINES.USDC_TESTNET : TRUSTLINES.USDC_MAIN
 
 ## Amount Handling
 
-Stellar assets use 7 decimals. The Trustless Work API typically accepts amounts as numbers (not raw stroops), but verify with each endpoint:
+Stellar assets use 7 decimals. The Trustless Work API accepts all `amount` values as **numbers** (not raw stroops, not strings) — across every endpoint, including `fund-escrow`. The string conversions below only apply when talking directly to Stellar/Horizon:
 
 ```typescript
 // Human-readable: 100.50 USDC
