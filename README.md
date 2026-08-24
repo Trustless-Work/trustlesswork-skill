@@ -2,7 +2,7 @@
 
 # Trustless Work Development Skill
 
-[View on skills.sh](https://www.skills.sh/trustless-work/trustless-work-dev-skill)
+[View on skills.sh](https://www.skills.sh/trustless-work/trustlesswork-skill)
 
 A comprehensive AI skill for developing with the Trustless Work platform - enabling escrow contracts, milestone-based payments, and dispute resolution on the Stellar blockchain.
 
@@ -11,20 +11,20 @@ A comprehensive AI skill for developing with the Trustless Work platform - enabl
 Install this skill using:
 
 ```bash
-npx skills add trustless-work/trustless-work-dev-skill
+npx skills add trustless-work/trustlesswork-skill
 ```
 
 Or manually:
 
 ```bash
-git clone https://github.com/Trustless-Work/trustless-work-dev-skill.git
-cp -r trustless-work-dev-skill ~/.cursor/skills/trustless-work-dev
+git clone https://github.com/Trustless-Work/trustlesswork-skill.git
+cp -r trustlesswork-skill ~/.cursor/skills/trustless-work-dev
 ```
 
 ## Structure
 
 ```
-trustless-work-dev-skill/
+trustlesswork-skill/
 ├── SKILL.md                    # Main skill definition (required)
 ├── README.md                   # Project documentation
 ├── LICENSE                     # Apache-2.0 License
