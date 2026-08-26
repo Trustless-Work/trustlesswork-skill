@@ -114,7 +114,7 @@ interface MultiReleaseContract {
     }
   ],
   "trustline": {
-    "address": "GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN",
+    "address": "GBBD47IF6LWK7P7MDEVSCWR7DPUWV3NY3DTQEVFL4NAT4AQH3ZLLFLA5",
     "symbol": "USDC"
   }
 }
@@ -148,7 +148,7 @@ Returns unsigned XDR transaction:
 import axios from "axios";
 
 const http = axios.create({
-  baseURL: "https://api.trustlesswork.com",
+  baseURL: "https://dev.api.trustlesswork.com", // or https://api.trustlesswork.com for mainnet
   timeout: 10000,
   headers: {
     "Content-Type": "application/json",
@@ -195,7 +195,7 @@ export const deployMultiReleaseEscrow = async () => {
       },
     ],
     trustline: {
-      address: "GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN",
+      address: "GBBD47IF6LWK7P7MDEVSCWR7DPUWV3NY3DTQEVFL4NAT4AQH3ZLLFLA5", // testnet USDC issuer
       symbol: "USDC",
     },
   });
@@ -278,7 +278,7 @@ Returns unsigned XDR transaction:
 import axios from "axios";
 
 const http = axios.create({
-  baseURL: "https://api.trustlesswork.com",
+  baseURL: "https://dev.api.trustlesswork.com", // or https://api.trustlesswork.com for mainnet
   timeout: 10000,
   headers: {
     "Content-Type": "application/json",
@@ -424,7 +424,7 @@ Returns unsigned XDR transaction:
 import axios from "axios";
 
 const http = axios.create({
-  baseURL: "https://api.trustlesswork.com",
+  baseURL: "https://dev.api.trustlesswork.com", // or https://api.trustlesswork.com for mainnet
   timeout: 10000,
   headers: {
     "Content-Type": "application/json",
@@ -857,7 +857,7 @@ Returns unsigned XDR transaction:
 import axios from "axios";
 
 const http = axios.create({
-  baseURL: "https://api.trustlesswork.com",
+  baseURL: "https://dev.api.trustlesswork.com", // or https://api.trustlesswork.com for mainnet
   timeout: 10000,
   headers: {
     "Content-Type": "application/json",
@@ -949,7 +949,7 @@ async function multiReleaseWorkflow() {
       },
     ],
     trustline: {
-      address: "GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN",
+      address: "GBBD47IF6LWK7P7MDEVSCWR7DPUWV3NY3DTQEVFL4NAT4AQH3ZLLFLA5", // testnet USDC issuer
       symbol: "USDC",
     },
   });
@@ -1106,7 +1106,7 @@ const escrows = await response.data;
 import axios from "axios";
 
 const http = axios.create({
-  baseURL: "https://api.trustlesswork.com",
+  baseURL: "https://dev.api.trustlesswork.com", // or https://api.trustlesswork.com for mainnet
   timeout: 10000,
   headers: {
     "Content-Type": "application/json",
