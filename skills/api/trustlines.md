@@ -118,17 +118,17 @@ All parties involved in an escrow must have trustlines established:
 ### Using Stellar SDK
 
 ```typescript
-import { Server, Asset, TransactionBuilder, Operation, Network } from 'stellar-sdk';
+import { Horizon, Asset, TransactionBuilder, Operation, Networks } from '@stellar/stellar-sdk';
 
 async function establishTrustline(accountAddress: string, assetCode: string, issuer: string) {
-  const server = new Server('https://horizon.stellar.org');
+  const server = new Horizon.Server('https://horizon.stellar.org');
   const account = await server.loadAccount(accountAddress);
 
   const asset = new Asset(assetCode, issuer);
   
   const transaction = new TransactionBuilder(account, {
     fee: '100',
-    networkPassphrase: Network.PUBLIC
+    networkPassphrase: Networks.PUBLIC
   })
     .addOperation(
       Operation.changeTrust({
@@ -189,10 +189,10 @@ function fromStellarAmount(amount: string): number {
 ## Checking Trustline Status
 
 ```typescript
-import { Server } from 'stellar-sdk';
+import { Horizon } from '@stellar/stellar-sdk';
 
 async function checkTrustline(accountAddress: string, assetCode: string, issuer: string) {
-  const server = new Server('https://horizon.stellar.org');
+  const server = new Horizon.Server('https://horizon.stellar.org');
   const account = await server.loadAccount(accountAddress);
   
   const trustline = account.balances.find(
