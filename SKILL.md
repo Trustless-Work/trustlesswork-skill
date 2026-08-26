@@ -33,17 +33,18 @@ npx skills add trustless-work/trustless-work-dev-skill
 
 ### When working with Trustless Work:
 
-1. **Configure MCP (recommended)** — See [MCP Integration](#mcp-integration) below for live docs and escrow tools
-2. **Understand core concepts** - See [skills/api/core-concepts.md](skills/api/core-concepts.md)
-3. **Choose escrow type**:
+1. **Know the platform laws** — Read [constitution.md](constitution.md) before designing any escrow flow: role permissions, lifecycle constraints, and API rules the smart contract enforces
+2. **Configure MCP (recommended)** — See [MCP Integration](#mcp-integration) below for live docs and escrow tools
+3. **Understand core concepts** - See [skills/api/core-concepts.md](skills/api/core-concepts.md)
+4. **Choose escrow type**:
    - Single-release: One payment after all milestones - See [skills/api/single-release-escrow.md](skills/api/single-release-escrow.md)
    - Multi-release: Payments per milestone - See [skills/api/multi-release-escrow.md](skills/api/multi-release-escrow.md)
-4. **Configure trustlines** - See [skills/api/trustlines.md](skills/api/trustlines.md)
-5. **Choose integration method**:
+5. **Configure trustlines** - See [skills/api/trustlines.md](skills/api/trustlines.md)
+6. **Choose integration method**:
    - **REST API**: Direct API calls - See [skills/api/](skills/api/) folder
    - **React SDK**: Custom hooks for React/Next.js - See [skills/react-sdk/react-sdk.md](skills/react-sdk/react-sdk.md)
    - **Blocks SDK**: Pre-built UI components - See [skills/blocks/introduction.md](skills/blocks/introduction.md)
-6. **Implement workflow**: Deploy → Fund → Complete → Approve → Release
+7. **Implement workflow**: Deploy → Fund → Complete → Approve → Release
 
 ## Gotchas
 
@@ -67,6 +68,9 @@ These are the non-obvious facts that the agent will get wrong without being told
 ## Reference Files
 
 Load these on demand — only when the task requires them:
+
+### Platform Laws
+- Read **[constitution.md](constitution.md)** before designing any escrow flow or answering questions about what a role can or cannot do — it is the authoritative summary of role permissions, lifecycle constraints, API rules, fees, and network rules enforced by the smart contract.
 
 ### REST API
 - Read **[skills/api/core-concepts.md](skills/api/core-concepts.md)** for roles, lifecycle, flags, and auth details.
