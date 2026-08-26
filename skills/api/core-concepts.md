@@ -9,7 +9,7 @@ Trustless Work is **Escrow-as-a-Service (EaaS)** for stablecoin escrow. It enabl
 ### Single-Release Escrow Flow
 
 1. **Deploy**: Initialize escrow with roles, milestones, and configuration
-2. **Fund**: Lock funds (escrow amount + platform fee) in escrow account
+2. **Fund**: Lock the escrow amount in the escrow account (fees are deducted at release, not funded upfront)
 3. **Update Milestone Status**: Service provider marks milestone(s) as complete, adds evidence
 4. **Approve**: Approver verifies and approves milestone(s)
 5. **Release**: Release Signer releases all funds at once to Receiver
@@ -19,7 +19,7 @@ Trustless Work is **Escrow-as-a-Service (EaaS)** for stablecoin escrow. It enabl
 ### Multi-Release Escrow Flow
 
 1. **Deploy**: Initialize escrow with roles and milestones (each with its own amount and receiver)
-2. **Fund**: Lock total funds (sum of all milestone amounts + platform fee)
+2. **Fund**: Lock the total funds (sum of all milestone amounts; fees are deducted at release)
 3. **Update Milestone Status**: Service provider marks a milestone as complete
 4. **Approve**: Approver verifies and approves milestone
 5. **Release Milestone**: Release Signer releases funds for that specific milestone
@@ -172,8 +172,8 @@ const verifyResponse = await fetch(
 
 ### Security
 
-1. **Never expose API keys** in client-side code or public repos
-2. **Use environment variables**: `NEXT_PUBLIC_API_KEY` for frontend (read-only acceptable), server-side for write flows
+1. **Never commit API keys** to repos — load them from environment variables and rotate them from the dApp if leaked
+2. **Know the key model**: the official SDK pattern uses `NEXT_PUBLIC_API_KEY`, which is browser-visible by design — treat Trustless Work API keys as client-visible application keys. Stellar secret keys (`S...`) are absolute secrets and never leave the user's wallet
 3. **Validate on-chain** when displaying escrow data (`validateOnChain=true`)
 4. **Verify transaction signatures** before submitting
 5. **Handle errors gracefully** with user-friendly messages

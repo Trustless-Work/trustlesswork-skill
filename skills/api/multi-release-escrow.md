@@ -219,7 +219,7 @@ export const deployMultiReleaseEscrow = async () => {
 
 **Endpoint:** `POST /escrow/multi-release/fund-escrow`
 
-Deposit funds into an existing escrow contract. Amount should equal sum of all milestone amounts + platform fee.
+Deposit funds into an existing escrow contract. Amount should equal the sum of all milestone amounts. Fees (platform fee and the 0.3% protocol fee on mainnet) are calculated from the escrow amount and deducted at release — they are not an extra amount to fund.
 
 ### Request Schema
 
@@ -227,7 +227,7 @@ Deposit funds into an existing escrow contract. Amount should equal sum of all m
 interface FundEscrow {
   contractId: string;  // ID (address) that identifies the escrow contract
   signer: string;      // Entity that signs the transaction
-  amount: number;      // Amount to transfer to the escrow contract (sum of all milestone amounts + platform fee)
+  amount: number;      // Amount to transfer to the escrow contract (sum of all milestone amounts)
 }
 ```
 
@@ -240,7 +240,7 @@ interface FundEscrow {
 ### Constraints
 
 - Amount cannot be equal to or less than zero
-- Amount should equal: sum of all milestone amounts + platform fee
+- Amount should equal: sum of all milestone amounts (fees are deducted at release, not funded upfront)
 
 ### Example Request
 
@@ -248,11 +248,11 @@ interface FundEscrow {
 {
   "contractId": "CHASVBD1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ",
   "signer": "GABC1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ",
-  "amount": 10200
+  "amount": 10000
 }
 ```
 
-**Note:** For milestones totaling 10000 + platform fee 200 = 10200
+**Note:** For milestones totaling 10000 (2000 + 3000 + 3000 + 2000)
 
 ### Response
 
@@ -292,7 +292,7 @@ export const fundEscrow = async (contractId: string, totalAmount: number) => {
   const response = await http.post("/escrow/multi-release/fund-escrow", {
     contractId,
     signer: address,
-    amount: totalAmount, // Sum of all milestone amounts + platform fee
+    amount: totalAmount, // Sum of all milestone amounts
   });
 
   const { unsignedTransaction } = response.data;
@@ -966,11 +966,11 @@ async function multiReleaseWorkflow() {
 
   const contractId = deployTx.data.contractId;
 
-  // 2. Fund escrow (total: 2000 + 3000 + 3000 + 2000 + 200 platformFee = 10200)
+  // 2. Fund escrow (total: 2000 + 3000 + 3000 + 2000 = 10000)
   const fundResponse = await http.post("/escrow/multi-release/fund-escrow", {
     contractId,
     signer: address,
-    amount: 10200,
+    amount: 10000,
   });
 
   const { unsignedTransaction: fundXdr } = fundResponse.data;
@@ -1142,9 +1142,10 @@ const { data } = tx;
 ### Calculate Total Funding Amount
 
 ```typescript
-function calculateTotalFunding(milestones: Milestone[], platformFee: number): number {
-  const milestoneTotal = milestones.reduce((sum, m) => sum + m.amount, 0);
-  return milestoneTotal + platformFee;
+// Fund the sum of milestone amounts. Platform and protocol fees are
+// calculated from the escrow amount and deducted at release.
+function calculateTotalFunding(milestones: Milestone[]): number {
+  return milestones.reduce((sum, m) => sum + m.amount, 0);
 }
 
 // Example
@@ -1152,6 +1153,5 @@ const milestones = [
   { amount: 2000, description: "Milestone 1", receiver: "..." },
   { amount: 3000, description: "Milestone 2", receiver: "..." },
 ];
-const platformFee = 200;
-const totalFunding = calculateTotalFunding(milestones, platformFee); // 5200
+const totalFunding = calculateTotalFunding(milestones); // 5000
 ```

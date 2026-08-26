@@ -33,7 +33,7 @@ npx skills add trustless-work/trustless-work-dev-skill
 
 ### When working with Trustless Work:
 
-1. **Know the platform laws** — Read [constitution.md](constitution.md) before designing any escrow flow: role permissions, lifecycle constraints, and API rules the smart contract enforces
+1. **Know the platform laws** — Read [constitution.md](constitution.md) before designing any escrow flow: role permissions, lifecycle preconditions, and API rules, each tagged as contract-enforced, canonical workflow, security practice, or versioned fact
 2. **Configure MCP (recommended)** — See [MCP Integration](#mcp-integration) below for live docs and escrow tools
 3. **Understand core concepts** - See [skills/api/core-concepts.md](skills/api/core-concepts.md)
 4. **Choose escrow type**:
@@ -56,7 +56,7 @@ These are the non-obvious facts that the agent will get wrong without being told
 - **Header is `x-api-key`**: Not `Authorization: Bearer`. This is the single most common auth mistake.
 - **Single-release requires ALL milestones approved before any release**: You cannot call release-funds until every milestone is individually approved. Multi-release allows per-milestone releases.
 - **Resolve-dispute distributions must sum to post-fee balance**: On mainnet, the 0.3% protocol fee is already deducted before you can distribute. Use the actual escrow balance, not the original deposit amount.
-- **Mainnet has a 0.3% protocol fee on top of platform fee**: Total cost = `amount + platformFee + (amount × 0.003)`.
+- **Fees are deducted from the escrow amount at release, not funded upfront**: `platformFee` is a fee-rate configuration, not an extra amount to deposit. At release the contract computes the platform fee and the 0.3% Trustless Work protocol fee (mainnet) from the escrow amount and sends the remainder to the receiver.
 - **After funding, only milestones can be added**: Roles, amount, and platform fee cannot be changed once the escrow has funds.
 - **`trustline.address` is always the issuer address (starts with G), never the Soroban contract address (starts with C)**: The API resolves the Soroban contract address internally — you don't need to find it. USDC Testnet: `GBBD47IF6LWK7P7MDEVSCWR7DPUWV3NY3DTQEVFL4NAT4AQH3ZLLFLA5` — USDC Mainnet: `GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN`. Using a C address or the wrong network's address causes silent funding failures.
 - **All parties need trustlines before the escrow can be funded**: Payer, receiver, and platform address must all hold a trustline for the escrow token. Read [skills/api/trustlines.md](skills/api/trustlines.md) if trustline errors occur.
@@ -70,7 +70,7 @@ These are the non-obvious facts that the agent will get wrong without being told
 Load these on demand — only when the task requires them:
 
 ### Platform Laws
-- Read **[constitution.md](constitution.md)** before designing any escrow flow or answering questions about what a role can or cannot do — it is the authoritative summary of role permissions, lifecycle constraints, API rules, fees, and network rules enforced by the smart contract.
+- Read **[constitution.md](constitution.md)** before designing any escrow flow or answering questions about what a role can or cannot do — the compressed agent-facing summary of role permissions, lifecycle preconditions, API rules, fees, and network rules, with each statement tagged ENFORCED / CANONICAL / SECURITY / FACT and a source-of-truth hierarchy on top.
 
 ### REST API
 - Read **[skills/api/core-concepts.md](skills/api/core-concepts.md)** for roles, lifecycle, flags, and auth details.

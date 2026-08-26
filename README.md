@@ -152,7 +152,7 @@ npx trustless-work add escrows/escrows-by-signer/table
 ## Documentation Files
 
 ### Platform Laws
-- **[constitution.md](constitution.md)** - The Trustless Work Constitution: authoritative role permissions, lifecycle constraints, API rules, fees, and network rules enforced by the smart contract. Agents should read this before designing any escrow flow.
+- **[constitution.md](constitution.md)** - The Trustless Work Constitution: compressed agent-facing summary of role permissions, lifecycle preconditions, API rules, fees, and network rules — each statement tagged as contract-ENFORCED, CANONICAL workflow, SECURITY practice, or versioned FACT, under an explicit source-of-truth hierarchy. Agents should read this before designing any escrow flow.
 
 ### REST API
 - **[skills/api/core-concepts.md](skills/api/core-concepts.md)** - Overview, roles, lifecycle, API authentication, error handling
