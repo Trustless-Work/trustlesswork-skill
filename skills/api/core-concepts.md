@@ -13,7 +13,7 @@ Trustless Work is **Escrow-as-a-Service (EaaS)** for stablecoin escrow. It enabl
 3. **Update Milestone Status**: Service provider marks milestone(s) as complete, adds evidence
 4. **Approve**: Approver verifies and approves milestone(s)
 5. **Release**: Release Signer releases all funds at once to Receiver
-6. **Dispute** (optional): Service Provider, Approver, or Release Signer can raise a dispute
+6. **Dispute** (optional): any role except the Dispute Resolver can raise a dispute (Approver, Service Provider, Platform, Release Signer, or Receiver)
 7. **Resolve**: Dispute Resolver decides how to distribute funds
 
 ### Multi-Release Escrow Flow
@@ -35,9 +35,9 @@ Trustless Work is **Escrow-as-a-Service (EaaS)** for stablecoin escrow. It enabl
 | **Service Provider** | Delivers work, updates milestone status, adds evidence |
 | **Approver** | Validates completion, approves milestones, can raise disputes |
 | **Release Signer** | Executes fund releases after approvals, can raise disputes |
-| **Receiver** | Final recipient of released funds (defaults to Service Provider) |
-| **Dispute Resolver** | Resolves disputes by redirecting funds |
-| **Platform Address** | Receives platform fees; can update escrow before funding |
+| **Receiver** | Final recipient of released funds (defaults to Service Provider); can raise disputes |
+| **Dispute Resolver** | Resolves disputes by redirecting funds; cannot raise them |
+| **Platform Address** | Receives platform fees; can update escrow before funding; can raise disputes |
 
 ### Role Capability Matrix
 
@@ -46,9 +46,9 @@ Trustless Work is **Escrow-as-a-Service (EaaS)** for stablecoin escrow. It enabl
 | Service Provider | Yes | No | Yes | No | No | Sometimes | No |
 | Approver | No | Yes | Yes | No | No | Usually no | No |
 | Release Signer | No | No | Yes | No | Yes | Usually no | No |
-| Receiver | No | No | No | No | No | Yes | No |
-| Dispute Resolver | No | Case-specific | No | Yes | Case-specific | No | No |
-| Platform Address | No (before funding: Yes) | No | No | No | No | No | Yes |
+| Receiver | No | No | Yes | No | No | Yes | No |
+| Dispute Resolver | No | No | No | Yes | No | No | No |
+| Platform Address | No (before funding: Yes) | No | Yes | No | No | No | Yes |
 
 ### Important Distinctions
 

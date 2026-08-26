@@ -688,18 +688,18 @@ Dispute Resolver decides how to distribute funds by providing distributions.
 interface ResolveDispute {
   contractId: string;        // ID (address) that identifies the escrow contract
   disputeResolver: string;    // Address of the user defined to resolve disputes in an escrow
-  distributions: [string, string][];  // Array of distributions detailing address and amount to allocate when resolving the dispute. Amounts should sum the remaining escrow funds (post-fees).
+  distributions: { address: string; amount: number }[];  // Distributions detailing address and amount to allocate. Must sum exactly to the current escrow balance (post-fees).
 }
 ```
 
 ### Distributions Format
 
-Distributions is an array of tuples: `[address, amount]`
+Distributions is an array of `{ address, amount }` objects (amounts are numbers):
 
 ```typescript
 distributions: [
-  ["GDEF4567890123456789012345678901234567890", "4000"],
-  ["GABC1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ", "900"]
+  { address: "GDEF4567890123456789012345678901234567890", amount: 4000 },
+  { address: "GABC1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ", amount: 900 }
 ]
 ```
 
@@ -722,8 +722,8 @@ distributions: [
   "contractId": "CHASVBD1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ",
   "disputeResolver": "GJKL0123456789012345678901234567890123456",
   "distributions": [
-    ["GDEF4567890123456789012345678901234567890", "4000"],
-    ["GABC1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ", "900"]
+    { "address": "GDEF4567890123456789012345678901234567890", "amount": 4000 },
+    { "address": "GABC1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ", "amount": 900 }
   ]
 }
 ```
