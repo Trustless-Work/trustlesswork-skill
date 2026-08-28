@@ -13,7 +13,7 @@ Trustless Work is **Escrow-as-a-Service (EaaS)** for stablecoin escrow. It enabl
 3. **Update Milestone Status**: Service provider marks milestone(s) as complete, adds evidence
 4. **Approve**: Approver verifies and approves milestone(s)
 5. **Release**: Release Signer releases all funds at once to Receiver
-6. **Dispute** (optional): any role except the Dispute Resolver can raise a dispute (Approver, Service Provider, Platform, Release Signer, or Receiver)
+6. **Dispute** (optional): any dispute-capable role assignment except the Dispute Resolver can raise a dispute (Approver, Service Provider, Platform, Release Signer, or Receiver)
 7. **Resolve**: Dispute Resolver decides how to distribute funds
 
 ### Multi-Release Escrow Flow
@@ -24,38 +24,41 @@ Trustless Work is **Escrow-as-a-Service (EaaS)** for stablecoin escrow. It enabl
 4. **Approve**: Approver verifies and approves milestone
 5. **Release Milestone**: Release Signer releases funds for that specific milestone
 6. **Repeat**: Steps 3-5 for each milestone
-7. **Withdraw Remaining**: Dispute Resolver can withdraw remaining funds after completion
+7. **Withdraw Remaining**: Historically documented for Multi Release; see `constitution.md` and contract issue #117 for the current validation note on Single vs Multi support
 
 ## Key Roles
 
 ### Core Roles
 
-| Role | Responsibility |
+| Role | Responsibility / authority granted by this assignment |
 |------|---------------|
-| **Service Provider** | Delivers work, updates milestone status, adds evidence |
+| **Service Provider** | Delivers work, updates milestone status, adds evidence, can raise disputes |
 | **Approver** | Validates completion, approves milestones, can raise disputes |
 | **Release Signer** | Executes fund releases after approvals, can raise disputes |
-| **Receiver** | Final recipient of released funds (defaults to Service Provider); can raise disputes |
-| **Dispute Resolver** | Resolves disputes by redirecting funds; cannot raise them |
-| **Platform Address** | Receives platform fees; can update escrow before funding; can raise disputes |
+| **Receiver** | Final recipient of released funds; can raise disputes |
+| **Dispute Resolver** | Resolves disputes by distributing funds; the address assigned to this role cannot raise a dispute |
+| **Platform Address** | Receives platform fees; can update escrow subject to lifecycle restrictions; can raise disputes |
 
 ### Role Capability Matrix
 
-| Role | Update status | Approve | Raise dispute | Resolve | Release | Receive payout | Receive fee |
+The matrix describes what each role assignment authorizes **by itself**. If one address holds multiple roles, its effective authority is the combination of those assignments, except where the contract explicitly prohibits an action for that address (notably `disputeResolver` raising a dispute).
+
+| Role assignment | Update milestone status | Approve | Raise dispute | Resolve | Release | Receive payout | Receive fee |
 |------|-------------|---------|--------------|---------|---------|---------------|------------|
-| Service Provider | Yes | No | Yes | No | No | Sometimes | No |
-| Approver | No | Yes | Yes | No | No | Usually no | No |
-| Release Signer | No | No | Yes | No | Yes | Usually no | No |
+| Service Provider | Yes | No | Yes | No | No | Only if also a receiver | No |
+| Approver | No | Yes | Yes | No | No | Only if also a receiver | No |
+| Release Signer | No | No | Yes | No | Yes | Only if also a receiver | No |
 | Receiver | No | No | Yes | No | No | Yes | No |
-| Dispute Resolver | No | No | No | Yes | No | No | No |
-| Platform Address | No (before funding: Yes) | No | Yes | No | No | No | Yes |
+| Dispute Resolver | No | No | **No — explicitly prohibited** | Yes | No | Only if also a distribution recipient | No |
+| Platform Address | No | No | Yes | No | No | Only if also a receiver/distribution recipient | Yes |
 
 ### Important Distinctions
 
-- **Status update** = communicates progress (Service Provider)
-- **Approval** = validates completion (Approver)
-- **Release** = executes payment movement (Release Signer)
-- The same address can hold multiple roles (e.g., Approver + Release Signer), but avoid Service Provider + Approver (can approve own work)
+- **Status update** = communicates progress (authorized by the Service Provider role assignment)
+- **Approval** = validates completion (authorized by the Approver role assignment)
+- **Release** = executes payment movement (authorized by the Release Signer role assignment)
+- **Role co-location is supported by design**: the same address may hold multiple roles, including Service Provider + Approver. Use distinct addresses when the product requires separation of duties or independent checks; V1 does not require role separation.
+- **`engagementId` is an external reference**: use it to associate an escrow with your own contract, sale, invoice, order, grant, or serial number. V1 does not enforce global uniqueness.
 
 ## Escrow Flags
 
@@ -100,7 +103,7 @@ Testnet:  https://dev.api.trustlesswork.com
 
 ## Fees
 
-Mainnet charges a **0.3% protocol fee** on top of your platform fee.
+Mainnet deducts a **0.3% protocol fee** at release alongside the configured platform fee; neither fee is an extra amount that must be funded upfront.
 
 ## Common Error Types
 
@@ -126,7 +129,7 @@ enum ApiErrorTypes {
 All escrow write operations follow this pattern:
 
 1. **Call API endpoint** → Returns unsigned XDR transaction
-2. **Sign transaction** → Use wallet to sign XDR with the correct role wallet
+2. **Sign transaction** → Use the signer authorized for that operation to sign the XDR
 3. **Submit transaction** → POST to `/helper/send-transaction` with signed XDR
 4. **Verify on-chain** → Query escrow with `validateOnChain=true`
 
@@ -145,7 +148,7 @@ const response = await fetch('https://api.trustlesswork.com/deployer/single-rele
 
 const { unsignedTransaction } = await response.json();
 
-// 2. Sign with wallet
+// 2. Sign with the address authorized for this operation
 const { signedTxXdr } = await signTransaction(unsignedTransaction, {
   address,
   networkPassphrase: WalletNetwork.TESTNET,
@@ -173,7 +176,7 @@ const verifyResponse = await fetch(
 ### Security
 
 1. **Never commit API keys** to repos — load them from environment variables and rotate them from the dApp if leaked
-2. **Know the key model**: the official SDK pattern uses `NEXT_PUBLIC_API_KEY`, which is browser-visible by design — treat Trustless Work API keys as client-visible application keys. Stellar secret keys (`S...`) are absolute secrets and never leave the user's wallet
+2. **Know the key model**: the official V1 SDK pattern uses `NEXT_PUBLIC_API_KEY`, which is browser-visible by design — treat Trustless Work API keys as client-visible application keys. Stellar secret keys (`S...`) are absolute secrets and never leave the user's wallet
 3. **Validate on-chain** when displaying escrow data (`validateOnChain=true`)
 4. **Verify transaction signatures** before submitting
 5. **Handle errors gracefully** with user-friendly messages
