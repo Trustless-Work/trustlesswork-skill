@@ -53,7 +53,7 @@ npx trustless-work init
 NEXT_PUBLIC_API_KEY=your_api_key_here
 ```
 
-> Read-only calls can work without an API key. Write flows require a valid key.
+> All API calls — including read-only indexer queries — require a valid API key. The deployed API returns `401 Unauthorized` without it.
 
 ### 4. Add Modules
 

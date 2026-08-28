@@ -71,7 +71,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 NEXT_PUBLIC_API_KEY=your_api_key_here
 ```
 
-> Write flows (deploy, fund, release, etc.) require a valid API key. Read-only calls can work without one.
+> All API calls — including read-only indexer queries — require a valid API key. The deployed API returns `401 Unauthorized` without it.
 
 ## Hooks Overview
 

@@ -219,7 +219,7 @@ export const deployMultiReleaseEscrow = async () => {
 
 **Endpoint:** `POST /escrow/multi-release/fund-escrow`
 
-Deposit funds into an existing escrow contract. Amount should equal sum of all milestone amounts + platform fee.
+Deposit funds into an existing escrow contract. Amount should equal the sum of all milestone amounts. Fees (platform fee and the 0.3% protocol fee on mainnet) are calculated from the escrow amount and deducted at release — they are not an extra amount to fund.
 
 ### Request Schema
 
@@ -227,7 +227,7 @@ Deposit funds into an existing escrow contract. Amount should equal sum of all m
 interface FundEscrow {
   contractId: string;  // ID (address) that identifies the escrow contract
   signer: string;      // Entity that signs the transaction
-  amount: number;      // Amount to transfer to the escrow contract (sum of all milestone amounts + platform fee)
+  amount: number;      // Amount to transfer to the escrow contract (sum of all milestone amounts)
 }
 ```
 
@@ -240,7 +240,7 @@ interface FundEscrow {
 ### Constraints
 
 - Amount cannot be equal to or less than zero
-- Amount should equal: sum of all milestone amounts + platform fee
+- Amount should equal: sum of all milestone amounts (fees are deducted at release, not funded upfront)
 
 ### Example Request
 
@@ -248,11 +248,11 @@ interface FundEscrow {
 {
   "contractId": "CHASVBD1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ",
   "signer": "GABC1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ",
-  "amount": 10200
+  "amount": 10000
 }
 ```
 
-**Note:** For milestones totaling 10000 + platform fee 200 = 10200
+**Note:** For milestones totaling 10000 (2000 + 3000 + 3000 + 2000)
 
 ### Response
 
@@ -292,7 +292,7 @@ export const fundEscrow = async (contractId: string, totalAmount: number) => {
   const response = await http.post("/escrow/multi-release/fund-escrow", {
     contractId,
     signer: address,
-    amount: totalAmount, // Sum of all milestone amounts + platform fee
+    amount: totalAmount, // Sum of all milestone amounts
   });
 
   const { unsignedTransaction } = response.data;
@@ -638,18 +638,18 @@ interface ResolveDispute {
   contractId: string;        // ID (address) that identifies the escrow contract
   milestoneIndex: string;    // Index of the milestone to be resolved
   disputeResolver: string;   // Address of the user defined to resolve disputes in an escrow
-  distributions: [string, string][];  // Array of distributions detailing address and amount to allocate when resolving the dispute. Amounts should sum the milestone amount (post-fees).
+  distributions: { address: string; amount: number }[];  // Distributions detailing address and amount to allocate. Must be positive and must not exceed the milestone amount (they do not have to equal the full balance).
 }
 ```
 
 ### Distributions Format
 
-Distributions is an array of tuples: `[address, amount]`
+Distributions is an array of `{ address, amount }` objects (amounts are numbers):
 
 ```typescript
 distributions: [
-  ["GDEF4567890123456789012345678901234567890", "1900"], // Service provider gets most
-  ["GABC1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ", "100"]   // Payer gets refund
+  { address: "GDEF4567890123456789012345678901234567890", amount: 1900 }, // Service provider gets most
+  { address: "GABC1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ", amount: 100 }   // Payer gets refund
 ]
 ```
 
@@ -663,7 +663,7 @@ distributions: [
 ### Constraints
 
 - None of the amounts to be transferred should be less or equal than 0
-- The sum of distributions must equal the milestone amount (post-fees)
+- The total of distributions must not exceed the milestone amount (it does not have to equal the full balance)
 - The total amount to be distributed cannot be equal to zero
 
 ### Example Request
@@ -674,8 +674,8 @@ distributions: [
   "milestoneIndex": "0",
   "disputeResolver": "GJKL0123456789012345678901234567890123456",
   "distributions": [
-    ["GDEF4567890123456789012345678901234567890", "1900"],
-    ["GABC1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ", "100"]
+    { "address": "GDEF4567890123456789012345678901234567890", "amount": 1900 },
+    { "address": "GABC1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ", "amount": 100 }
   ]
 }
 ```
@@ -696,7 +696,7 @@ Returns unsigned XDR transaction:
 - `400`: None of the amounts to be transferred should be less or equal than 0
 - `400`: Escrow not in dispute
 - `400`: Insufficient funds for resolution
-- `400`: The sum of distributions must equal the milestone amount when resolving a dispute
+- `400`: Total dispute funds must not exceed the milestone amount
 - `400`: The total amount to be distributed cannot be equal to zero
 - `400`: Escrow not found
 - `400`: Invalid milestone index
@@ -789,18 +789,18 @@ Dispute Resolver can withdraw remaining funds after all milestones are completed
 interface WithdrawRemainingFunds {
   contractId: string;        // ID (address) that identifies the escrow contract
   disputeResolver: string;    // Address of the user defined to resolve disputes in an escrow
-  distributions: [string, string][];  // Array of distributions detailing address and amount to allocate when withdrawing the remaining funds after resolution or completion. Amounts should sum the remaining escrow balance (post-fees).
+  distributions: { address: string; amount: number }[];  // Distributions detailing address and amount to allocate when withdrawing remaining funds after all milestones are released or resolved. Total must be positive and must not exceed the remaining contract balance.
 }
 ```
 
 ### Distribution Format
 
-Distributions is an array of tuples: `[address, amount]`
+Distributions is an array of `{ address, amount }` objects (amounts are numbers):
 
 ```typescript
 distributions: [
-  ["GDEF4567890123456789012345678901234567890", "100"],
-  ["GABC1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ", "50"]
+  { address: "GDEF4567890123456789012345678901234567890", amount: 100 },
+  { address: "GABC1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ", amount: 50 }
 ]
 ```
 
@@ -813,7 +813,8 @@ distributions: [
 ### Constraints
 
 - Only the dispute resolver can execute this function
-- Distribution amounts should sum the remaining escrow balance (post-fees)
+- All milestones must already be released or dispute-resolved
+- The total must be positive and must not exceed the remaining contract balance
 - None of the amounts should be less than or equal to zero
 
 ### Example Request
@@ -823,8 +824,8 @@ distributions: [
   "contractId": "CHASVBD1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ",
   "disputeResolver": "GJKL0123456789012345678901234567890123456",
   "distributions": [
-    ["GDEF4567890123456789012345678901234567890", "100"],
-    ["GABC1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ", "50"]
+    { "address": "GDEF4567890123456789012345678901234567890", "amount": 100 },
+    { "address": "GABC1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ", "amount": 50 }
   ]
 }
 ```
@@ -966,11 +967,11 @@ async function multiReleaseWorkflow() {
 
   const contractId = deployTx.data.contractId;
 
-  // 2. Fund escrow (total: 2000 + 3000 + 3000 + 2000 + 200 platformFee = 10200)
+  // 2. Fund escrow (total: 2000 + 3000 + 3000 + 2000 = 10000)
   const fundResponse = await http.post("/escrow/multi-release/fund-escrow", {
     contractId,
     signer: address,
-    amount: 10200,
+    amount: 10000,
   });
 
   const { unsignedTransaction: fundXdr } = fundResponse.data;
@@ -1142,9 +1143,10 @@ const { data } = tx;
 ### Calculate Total Funding Amount
 
 ```typescript
-function calculateTotalFunding(milestones: Milestone[], platformFee: number): number {
-  const milestoneTotal = milestones.reduce((sum, m) => sum + m.amount, 0);
-  return milestoneTotal + platformFee;
+// Fund the sum of milestone amounts. Platform and protocol fees are
+// calculated from the escrow amount and deducted at release.
+function calculateTotalFunding(milestones: Milestone[]): number {
+  return milestones.reduce((sum, m) => sum + m.amount, 0);
 }
 
 // Example
@@ -1152,6 +1154,5 @@ const milestones = [
   { amount: 2000, description: "Milestone 1", receiver: "..." },
   { amount: 3000, description: "Milestone 2", receiver: "..." },
 ];
-const platformFee = 200;
-const totalFunding = calculateTotalFunding(milestones, platformFee); // 5200
+const totalFunding = calculateTotalFunding(milestones); // 5000
 ```

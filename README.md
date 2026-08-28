@@ -151,6 +151,9 @@ npx trustless-work add escrows/escrows-by-signer/table
 
 ## Documentation Files
 
+### Platform Laws
+- **[constitution.md](constitution.md)** - The Trustless Work Constitution: compressed agent-facing summary of role permissions, lifecycle preconditions, API rules, fees, and network rules — each statement tagged as contract-ENFORCED, CANONICAL workflow, SECURITY practice, or versioned FACT, under an explicit source-of-truth hierarchy. Agents should read this before designing any escrow flow.
+
 ### REST API
 - **[skills/api/core-concepts.md](skills/api/core-concepts.md)** - Overview, roles, lifecycle, API authentication, error handling
 - **[skills/api/types.md](skills/api/types.md)** - Complete TypeScript type definitions for all payloads (13+ types), responses, and errors with usage examples

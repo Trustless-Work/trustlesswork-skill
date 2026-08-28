@@ -33,40 +33,45 @@ npx skills add trustless-work/trustless-work-dev-skill
 
 ### When working with Trustless Work:
 
-1. **Configure MCP (recommended)** — See [MCP Integration](#mcp-integration) below for live docs and escrow tools
-2. **Understand core concepts** - See [skills/api/core-concepts.md](skills/api/core-concepts.md)
-3. **Choose escrow type**:
+1. **Know the platform laws** — Read [constitution.md](constitution.md) before designing any escrow flow: role permissions, lifecycle preconditions, and API rules, each tagged as contract-enforced, canonical workflow, security practice, or versioned fact
+2. **Configure MCP (recommended)** — See [MCP Integration](#mcp-integration) below for live docs and escrow tools
+3. **Understand core concepts** - See [skills/api/core-concepts.md](skills/api/core-concepts.md)
+4. **Choose escrow type**:
    - Single-release: One payment after all milestones - See [skills/api/single-release-escrow.md](skills/api/single-release-escrow.md)
    - Multi-release: Payments per milestone - See [skills/api/multi-release-escrow.md](skills/api/multi-release-escrow.md)
-4. **Configure trustlines** - See [skills/api/trustlines.md](skills/api/trustlines.md)
-5. **Choose integration method**:
+5. **Configure trustlines** - See [skills/api/trustlines.md](skills/api/trustlines.md)
+6. **Choose integration method**:
    - **REST API**: Direct API calls - See [skills/api/](skills/api/) folder
    - **React SDK**: Custom hooks for React/Next.js - See [skills/react-sdk/react-sdk.md](skills/react-sdk/react-sdk.md)
    - **Blocks SDK**: Pre-built UI components - See [skills/blocks/introduction.md](skills/blocks/introduction.md)
-6. **Implement workflow**: Deploy → Fund → Complete → Approve → Release
+7. **Implement workflow**: Deploy → Fund → Complete → Approve → Release
 
 ## Gotchas
 
 These are the non-obvious facts that the agent will get wrong without being told:
 
-- **`amount` is always a `number`**: Across the entire integration — `deploy`, `fund-escrow`, milestone amounts, and React SDK's `FundEscrowPayload` — send `1000`, never `"1000"`.
+- **`amount` is always a `number`**: Across the entire V1 integration — `deploy`, `fund-escrow`, milestone amounts, and React SDK's `FundEscrowPayload` — send `1000`, never `"1000"`.
 - **`milestoneIndex` is always a string**: Pass `"0"` not `0` — even though it looks numeric.
-- **Don't include `status` or `approvedFlag` in milestone objects when deploying**: Only `description` is valid on deploy. Adding those fields causes errors.
-- **Header is `x-api-key`**: Not `Authorization: Bearer`. This is the single most common auth mistake.
+- **Don't include `status` or `approvedFlag` in single-release milestone objects when deploying**: Only `description` is valid on V1 Single Release deploy. Adding those fields causes errors.
+- **Header is `x-api-key`**: Not `Authorization: Bearer` for the V1 API-key requirement. This is the single most common auth mistake.
 - **Single-release requires ALL milestones approved before any release**: You cannot call release-funds until every milestone is individually approved. Multi-release allows per-milestone releases.
-- **Resolve-dispute distributions must sum to post-fee balance**: On mainnet, the 0.3% protocol fee is already deducted before you can distribute. Use the actual escrow balance, not the original deposit amount.
-- **Mainnet has a 0.3% protocol fee on top of platform fee**: Total cost = `amount + platformFee + (amount × 0.003)`.
-- **After funding, only milestones can be added**: Roles, amount, and platform fee cannot be changed once the escrow has funds.
-- **`trustline.address` is always the issuer address (starts with G), never the Soroban contract address (starts with C)**: The API resolves the Soroban contract address internally — you don't need to find it. USDC Testnet: `GBBD47IF6LWK7P7MDEVSCWR7DPUWV3NY3DTQEVFL4NAT4AQH3ZLLFLA5` — USDC Mainnet: `GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN`. Using a C address or the wrong network's address causes silent funding failures.
-- **All parties need trustlines before the escrow can be funded**: Payer, receiver, and platform address must all hold a trustline for the escrow token. Read [skills/api/trustlines.md](skills/api/trustlines.md) if trustline errors occur.
-- **Service Provider and Approver should not be the same address**: The API allows it, but it defeats escrow security (self-approval of own work).
+- **Dispute distribution rules differ by escrow type**: Single-release `resolve-dispute` distributions must sum **exactly** to the current escrow balance. Multi-release `resolve-milestone-dispute` distributions must be positive, must not exceed that milestone's amount, and must not exceed the contract balance — they do **not** have to equal the full balance.
+- **Fees are deducted from the escrow amount at release, not funded upfront**: `platformFee` is a fee-rate configuration, not an extra amount to deposit. At release the contract computes the platform fee and the 0.3% Trustless Work protocol fee (mainnet) from the configured release amount and sends the remainder to the receiver.
+- **After funding, existing escrow state is frozen and only new milestones can be appended**: Roles, configured amounts, platform fee, and existing milestones cannot be changed once the escrow has funds. Existing approved milestones do not by themselves prevent appending new unapproved milestones.
+- **`trustline.address` is always the issuer address (starts with G), never the escrow Soroban contract address** in the V1 API payload shape described by this skill. USDC Testnet: `GBBD47IF6LWK7P7MDEVSCWR7DPUWV3NY3DTQEVFL4NAT4AQH3ZLLFLA5` — USDC Mainnet: `GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN`.
+- **Trustlines are needed to hold or receive the asset**: The depositor needs the trustline to fund, and every address that will receive tokens (receiver(s), platformAddress for fees, dispute-distribution addresses) needs it before funds reach them. Authority-only signatures don't require holding the asset. Read [skills/api/trustlines.md](skills/api/trustlines.md) if trustline errors occur.
+- **Role addresses may intentionally overlap**: V1 permits the same address to hold multiple roles. Its effective authority is the combination of those role assignments, except explicit contract prohibitions (for example, an address assigned as `disputeResolver` cannot raise a dispute). Use separate addresses when the product requires separation of duties; it is not a contract requirement.
 - **React SDK: `useSendTransaction` is required after every write hook**: Hooks return an unsigned XDR only. You must sign it and call `sendTransaction` — without this, nothing reaches the blockchain.
 - **React SDK: the `type` parameter must match the payload type**: `"single-release"` expects `SingleRelease*Payload`; `"multi-release"` expects `MultiRelease*Payload`. Mismatching causes runtime errors.
 - **Use `validateOnChain=true` when querying before critical operations**: Without it you may receive stale cached data. Always use it before release, dispute, or resolve calls.
+- **`engagementId` is an external reference, not a global uniqueness key**: Integrators can use it to link an escrow to their own contract, sale, invoice, order, grant, or serial number. V1 does not enforce global uniqueness of this field.
 
 ## Reference Files
 
 Load these on demand — only when the task requires them:
+
+### Platform Laws
+- Read **[constitution.md](constitution.md)** before designing any escrow flow or answering questions about what a role can or cannot do — the compressed agent-facing summary of role permissions, lifecycle preconditions, API rules, fees, and network rules, with each statement tagged ENFORCED / CANONICAL / SECURITY / FACT and a source-of-truth hierarchy on top.
 
 ### REST API
 - Read **[skills/api/core-concepts.md](skills/api/core-concepts.md)** for roles, lifecycle, flags, and auth details.
@@ -101,7 +106,7 @@ Rate limit: **50 requests per 60 seconds**
 ## Common Transaction Flow
 
 1. Call API endpoint → Get unsigned XDR transaction
-2. Sign with wallet → Create signed XDR
+2. Sign with the signer authorized for that operation → Create signed XDR
 3. Submit via `/helper/send-transaction` → Broadcast to Stellar
 4. Verify on-chain → Query with `validateOnChain=true`
 
