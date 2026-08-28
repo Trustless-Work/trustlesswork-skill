@@ -322,7 +322,7 @@ Service Provider marks a milestone as complete.
 interface CompleteMilestone {
   contractId: string;      // ID (address) that identifies the escrow contract
   signer: string;          // Service Provider address
-  milestoneIndex: number;   // Index of milestone (0-based)
+  milestoneIndex: string;   // Index of milestone (0-based, as string: "0", "1", ...)
 }
 ```
 
@@ -330,7 +330,7 @@ interface CompleteMilestone {
 
 - `contractId` (required)
 - `signer` (required)
-- `milestoneIndex` (required)
+- `milestoneIndex` (required) - as string
 
 ### Example Request
 
@@ -338,7 +338,7 @@ interface CompleteMilestone {
 {
   "contractId": "CHASVBD1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ",
   "signer": "GDEF4567890123456789012345678901234567890",
-  "milestoneIndex": 0
+  "milestoneIndex": "0"
 }
 ```
 
