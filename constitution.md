@@ -84,7 +84,7 @@ Actors without a role slot:
 ## Article IV — API Laws
 
 1. **[ENFORCED]** `x-api-key` header on **every** request — including read-only indexer queries. Verified against the deployed API: reads without a key return `401 Unauthorized`. Never `Authorization: Bearer`.
-2. **[ENFORCED]** Every write operation is 3 steps: **build** (API returns unsigned XDR) → **sign** (correct role's wallet) → **submit** (`POST /helper/send-transaction`). A new escrow's `contractId` exists only after step 3.
+2. **[ENFORCED]** Every write operation is 3 steps: **build** (API returns unsigned XDR) → **sign** (with the signer authorized for that operation) → **submit** (`POST /helper/send-transaction`). A new escrow's `contractId` exists only after step 3.
 3. **[ENFORCED]** `amount` is a **number** everywhere — deploy, `fund-escrow`, milestone amounts, dispute distributions. Never a string.
 4. **[ENFORCED]** `milestoneIndex` is a **string** (`"0"`, `"1"`, …) — even though it looks numeric.
 5. **[ENFORCED]** `trustline.address` is the token **issuer** address (starts with `G`), never the Soroban contract address (starts with `C`); the companion field is `symbol`, not `code`.
