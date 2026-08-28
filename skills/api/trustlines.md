@@ -13,7 +13,7 @@ A trustline is an explicit opt-in configuration that authorizes a Stellar accoun
 
 ## Trustline Requirements
 
-- **0.5 XLM reserve**: Each trustline requires 0.5 XLM in base reserve
+- **Base reserve**: Each trustline adds to the account's XLM base reserve — currently 0.5 XLM. This is a Stellar network parameter (it can change via network vote), not a Trustless Work constant
 - **Prevents abuse**: Limits spam and unauthorized asset creation
 - **Trust limit**: Maximum amount the account is willing to hold
 
