@@ -136,8 +136,8 @@ All escrow write operations follow this pattern:
 ### Example Transaction Flow
 
 ```typescript
-// 1. Get unsigned transaction
-const response = await fetch('https://api.trustlesswork.com/deployer/single-release', {
+// 1. Get unsigned transaction (testnet base URL — use https://api.trustlesswork.com for mainnet)
+const response = await fetch('https://dev.api.trustlesswork.com/deployer/single-release', {
   method: 'POST',
   headers: {
     'x-api-key': apiKey,
@@ -155,7 +155,7 @@ const { signedTxXdr } = await signTransaction(unsignedTransaction, {
 });
 
 // 3. Submit transaction
-const submitResponse = await fetch('https://api.trustlesswork.com/helper/send-transaction', {
+const submitResponse = await fetch('https://dev.api.trustlesswork.com/helper/send-transaction', {
   method: 'POST',
   headers: {
     'x-api-key': apiKey,
@@ -166,7 +166,7 @@ const submitResponse = await fetch('https://api.trustlesswork.com/helper/send-tr
 
 // 4. Verify on-chain
 const verifyResponse = await fetch(
-  `https://api.trustlesswork.com/helper/get-escrows-by-signer?signer=${signerAddress}&validateOnChain=true`,
+  `https://dev.api.trustlesswork.com/helper/get-escrows-by-signer?signer=${signerAddress}&validateOnChain=true`,
   { headers: { 'x-api-key': apiKey } }
 );
 ```
