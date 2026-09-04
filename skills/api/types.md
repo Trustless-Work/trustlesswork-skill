@@ -922,6 +922,7 @@ export type GetEscrowsFromIndexerResponse = {
   disputeStartedBy?: string;
   fundedBy?: string;
   isActive?: boolean;
+  /** @deprecated Legacy indexer fields from the old two-party resolution model — superseded by `distributions: { address, amount }[]`. Do not build new logic on them. */
   approverFunds?: string;
   receiverFunds?: string;
   user: string;
