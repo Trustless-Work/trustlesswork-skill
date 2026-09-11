@@ -53,14 +53,17 @@ Three steps, always:
 
 Nothing reaches the chain until step 3.
 
-The submit response carries a machine-readable `code`:
+The submit response always carries `txHash` and `ledger`. The rest depends on what was submitted:
+
+- **Successful factory deploy** — `contractId` plus the initial `escrow` snapshot. **No `code` field.**
+- **Everything else** — a machine-readable `code`:
 
 | Code | Meaning |
 | --- | --- |
-| `STELLAR_TX_SUBMITTED` | Submitted and indexed. |
-| `STELLAR_TX_SUBMITTED_INDEXER_LAGGING` | **Submitted successfully**, but the read model has not caught up. Not an error — do not retry the transaction. Re-read after a moment. |
+| `STELLAR_TX_SUBMITTED` | Plain (non-deploy) transaction submitted successfully. |
+| `STELLAR_TX_SUBMITTED_INDEXER_LAGGING` | Deploy **submitted successfully**, but the contract's return value was not indexed in time. Not an error — do not retry. Fetch the contract via `getTransaction(txHash)` or re-read shortly. |
 
-It also returns `txHash` and `ledger`, plus `contractId` and the `escrow` object when the transaction was a deploy.
+Branch on `code` when present, or on the presence of `contractId`, to know which variant you received. `message` is human-readable and unstable — never branch on it.
 
 ---
 
@@ -140,7 +143,7 @@ Supply `contractId`, or supply both `symbol` and `address`. When `contractId` is
 | Field | Type | Note |
 | --- | --- | --- |
 | `amount` (operate payloads) | `number` | Human-readable decimals (`1000`, not `"1000"`). |
-| `amount` (read responses) | `string` | Reads return **decimal strings**. Do not assume the type is symmetric with what you send. |
+| `amount` (read responses) | surface-dependent | The read model (`/escrows/...`) returns **decimal strings**; the versioned `GET /escrow/.../v2/:contractId` returns **numbers**. See “Two read surfaces”. |
 | `platformFee` | `number` | **Percent**, integer 0–100 (`1` means 1%). Scaled to basis points on-chain. |
 | `milestoneIndexes` | `number[]` | **Numbers, not strings.** v1's `milestoneIndex` was a string; v2 takes an array of numbers. |
 | `approvalsTarget` | `number` | Integer ≥ 1. |
@@ -226,4 +229,4 @@ There is no `/v2/` in these paths. `@trustless-work/escrow` 5.x and `@trustless-
 
 So if you are reading through an SDK you are on surface 2, and adding `/v2/` to those paths is wrong. Surface 1 is reached only by calling the transaction controller directly.
 
-**Read amounts come back as decimal strings**, unlike the numbers you send in operate payloads.
+**Amount types differ by surface**: the read model (surface 2) returns amounts and balances as **decimal strings**, unlike the numbers you send in operate payloads; the versioned reads (surface 1) return them as numbers.

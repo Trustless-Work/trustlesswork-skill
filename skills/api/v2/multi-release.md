@@ -70,7 +70,7 @@ Fund the escrow as a whole. The canonical target is the sum of the milestone amo
 }
 ```
 
-Complete desired state for the escrow's **properties and roles** — **`milestones` in this payload is ignored**; the contract preserves the existing ones. Use `manage-milestones` for milestones. `admin` only, rejected while any milestone is disputed, and only **before the first `fund` call** — the lock is the cumulative funded amount, which never decreases.
+Complete desired state for the escrow's **properties and roles** — **`milestones` in this payload is ignored**; the contract preserves the existing ones. Use `manage-milestones` for milestones — but the API still **requires** the array (1–50 entries): send the existing milestones back, omitting the field fails validation. `admin` only, rejected while any milestone is disputed, and only **before the first `fund` call** — the lock is the cumulative funded amount, which never decreases.
 
 ## Manage milestones
 
@@ -89,7 +89,7 @@ Complete desired state for the escrow's **properties and roles** — **`mileston
 }
 ```
 
-Multi-release updates can change a milestone's **amount** as well as its description — single-release cannot, since the amount lives on the escrow. **Every** milestone edit (description or amount) is rejected once the escrow has been funded; appending new milestones stays allowed until the escrow is released, disputed or resolved.
+Multi-release updates can change a milestone's **amount** as well as its description (`newDescription` max 500 chars) — single-release cannot, since the amount lives on the escrow. **Every** milestone edit (description or amount) is rejected once the escrow has been funded; appending new milestones stays allowed until the escrow is released, disputed or resolved.
 
 A new milestone's `receiver` must not be the `admin` or any `disputeResolver`. The contract rejects that configuration.
 
@@ -104,6 +104,8 @@ A new milestone's `receiver` must not be the `admin` or any `disputeResolver`. T
   "updates": [ { "index": 0, "newStatus": "completed", "newEvidence": "https://..." } ]
 }
 ```
+
+Same rules as single-release: `newStatus` max 50 chars, `newEvidence` optional, max 500.
 
 ## Approve milestones
 
@@ -146,7 +148,7 @@ Releases **only** the named milestones — unlike single-release, which pays the
 }
 ```
 
-Disputes specific milestones, leaving the rest of the escrow operative. Approvers, service providers, release signers, the platform and that milestone's receiver may raise one; a `disputeResolver` is rejected.
+Disputes specific milestones, leaving the rest of the escrow operative. `reason` is required, max 500 chars. Approvers, service providers, release signers, the platform and that milestone's receiver may raise one; a `disputeResolver` is rejected.
 
 ## Resolve a dispute
 
@@ -215,4 +217,4 @@ Same shape as single-release except: no top-level `amount`, no `roles.receiver`,
 }
 ```
 
-`GET /escrow/multi-release/v2/escrow-balances?addresses=C...&addresses=C...`
+`GET /escrow/multi-release/v2/escrow-balances?addresses=C...&addresses=C...` — max 20 addresses per call.

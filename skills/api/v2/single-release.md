@@ -4,7 +4,7 @@
 
 Base path: `/escrow/single-release/v2`
 
-Single-release pays out **once**, to a single `roles.receiver`, after the required milestones are approved. Every write endpoint returns `{ "unsignedTransaction": "..." }`.
+Single-release pays out **once**, to a single `roles.receiver`, after the required milestones are approved. Every write endpoint returns `{ "unsignedXdr": "...", "txHash": "..." }` — the build/sign/submit pattern in core-concepts.
 
 ---
 
@@ -63,7 +63,7 @@ Any address holding the asset may fund. Funding grants no role. The signer needs
 }
 ```
 
-The `escrow` object is the complete desired state for the escrow's **properties and roles** — but **`milestones` in this payload is ignored**: the contract preserves the existing milestones (and the dispute/released state). Change milestones through `manage-milestones` instead.
+The `escrow` object is the complete desired state for the escrow's **properties and roles** — but **`milestones` in this payload is ignored**: the contract preserves the existing milestones (and the dispute/released state). Change milestones through `manage-milestones` instead. The API still **requires** the array (1–50 entries) even though the contract ignores it — send the existing milestones back; omitting the field fails validation before reaching the contract.
 
 Only `admin` may call it, it is rejected while a dispute is open, and it only works **before the first `fund` call**: the lock is the cumulative funded amount, which never decreases, so releasing funds does not make the escrow editable again.
 
@@ -84,7 +84,7 @@ Only `admin` may call it, it is rejected while a dispute is open, and it only wo
 }
 ```
 
-Appends new milestones and edits existing descriptions. The receiver of a new milestone must not be the `admin` or any `disputeResolver`.
+Appends new milestones and edits existing descriptions (`newDescription` max 500 chars).
 
 ## Change milestone status
 
@@ -100,7 +100,7 @@ Appends new milestones and edits existing descriptions. The receiver of a new mi
 }
 ```
 
-Batched. Status is free text and moves no funds; convention is `pending → in_progress → completed`. `newEvidence` is optional.
+Batched. Status is free text (max 50 chars) and moves no funds; convention is `pending → in_progress → completed`. `newEvidence` is optional, max 500 chars.
 
 ## Approve milestones
 
@@ -148,7 +148,7 @@ Requires **all** milestones approved and no active dispute. Pays the configured 
 { "contractId": "C...", "signer": "G...", "reason": "Deliverable does not match scope" }
 ```
 
-Disputes the **whole escrow**. `reason` is required in v2 (v1 had none). Approvers, service providers, release signers, the platform and the receiver may raise one; a `disputeResolver` is rejected.
+Disputes the **whole escrow**. `reason` is required in v2 (v1 had none), max 500 chars. Approvers, service providers, release signers, the platform and the receiver may raise one; a `disputeResolver` is rejected.
 
 ## Resolve a dispute
 
@@ -234,4 +234,4 @@ Returns the escrow. Note the v2 shape: no `flags` object, `approvals` instead of
 
 `GET /escrow/single-release/v2/escrow-balances?addresses=C...&addresses=C...`
 
-Batch balance lookup for several escrow contracts.
+Batch balance lookup — max 20 contract addresses per call.
