@@ -77,7 +77,7 @@ Both versions are explained here so an agent can reason about either one and rec
 
 **Role overlap.** Now contract-enforced rather than a configurator choice: `disputeResolvers` may not overlap any other role, including `platform` and any milestone receiver, and `admin` may not be a payee. `admin` and `platform` may deliberately share an address — that pair is a capability distinction, not an address-separation rule.
 
-**Operations.** Adds batch approval, approve-and-release in one transaction, and milestone management after creation. Escrow properties and roles can only change while the balance is zero. `withdraw-remaining-funds` is narrowed to genuinely terminal states, unlike V1 which also permits it during an open dispute.
+**Operations.** Adds batch approval, approve-and-release in one transaction, and milestone management after creation (append or edit — never remove). Escrow properties, roles and milestone edits freeze at the **first `fund` call** — the lock is the cumulative funded amount, which never decreases, not the live balance; appending milestones stays allowed after funding. `withdraw-remaining-funds` is narrowed to genuinely terminal states, unlike V1 which also permits it during an open dispute, and must sweep the entire remaining balance, unlike V1 which allowed partial withdrawals.
 
 #### Recognizing a version in existing code
 
