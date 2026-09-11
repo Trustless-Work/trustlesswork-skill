@@ -1,6 +1,6 @@
 # Multi-Release Escrow
 
-> **Protocol version: V1.** This file documents the production V1 integration — the only version deployed on mainnet. The V2 API, React SDK and Blocks surfaces are **not** documented in this skill yet; for the contract-level differences between V1 and V2 see [constitution.md](../../constitution.md).
+> **Protocol version: V1.** This file documents the production V1 integration — the only version deployed on mainnet. The V2 Core API is documented separately in [skills/api/v2/](v2/); the V2 React SDK is documented in [skills/react-sdk/v2/](../../skills/react-sdk/v2/react-sdk.md); the V2 Blocks surface is **not** documented yet. For the contract-level differences see [constitution.md](../../constitution.md).
 
 Multi-release escrows release funds incrementally as each milestone is completed and approved.
 
