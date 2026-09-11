@@ -1,6 +1,6 @@
 # Core Concepts
 
-> **Protocol version: V1.** This file documents the production V1 integration — the only version deployed on mainnet. The V2 Core API is documented separately in [skills/api/v2/](v2/); the V2 React SDK and Blocks surfaces are **not** documented yet. For the contract-level differences see [constitution.md](../../constitution.md).
+> **Protocol version: V1.** This file documents the production V1 integration — the only version deployed on mainnet. The V2 Core API is documented separately in [skills/api/v2/](v2/); the V2 React SDK is documented in [skills/react-sdk/v2/](../../skills/react-sdk/v2/react-sdk.md); the V2 Blocks surface is **not** documented yet. For the contract-level differences see [constitution.md](../../constitution.md).
 
 ## Overview
 

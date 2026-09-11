@@ -36,7 +36,7 @@ npx skills add trustless-work/trustlesswork-skill
 Trustless Work has two protocol versions, and they are not interchangeable.
 
 - **V1 is production and the default.** It is the only version deployed on mainnet. Build every normal integration from [skills/protocol/v1.md](skills/protocol/v1.md).
-- **V2 is beta and testnet-only.** It is deployed on testnet, so you can build on it there — contract semantics in [skills/protocol/v2.md](skills/protocol/v2.md), REST endpoints in [skills/api/v2/](skills/api/v2/core-concepts.md) — but never on mainnet while it is beta, and never as the recommended production path. Say it is beta every time.
+- **V2 is beta and testnet-only.** It is deployed on testnet, so you can build on it there — contract semantics in [skills/protocol/v2.md](skills/protocol/v2.md), REST endpoints in [skills/api/v2/](skills/api/v2/core-concepts.md), React SDK in [skills/react-sdk/v2/](skills/react-sdk/v2/react-sdk.md), JS SDK in [skills/js-sdk/](skills/js-sdk/js-sdk.md) — but never on mainnet while it is beta, and never as the recommended production path. Say it is beta every time.
 - **Explaining V2 is always in scope.** Answer any V2 question; the restriction is which network you target, not whether the user said "beta".
 - **Never mix them.** Roles, payload shapes, approval semantics and lifecycle rules belong to one version at a time.
 - **If the version is ambiguous, use V1** and state which version you are describing.
@@ -100,6 +100,12 @@ Load these on demand — only when the task requires them:
 - Read **[skills/api/v2/core-concepts.md](skills/api/v2/core-concepts.md)** first for the v2 role model, trustline forms, type rules and what changed from V1.
 - Read **[skills/api/v2/single-release.md](skills/api/v2/single-release.md)** when implementing any single-release v2 endpoint.
 - Read **[skills/api/v2/multi-release.md](skills/api/v2/multi-release.md)** when implementing any multi-release v2 endpoint.
+
+### React SDK — V2 (beta, testnet only)
+- Read **[skills/react-sdk/v2/react-sdk.md](skills/react-sdk/v2/react-sdk.md)** when integrating `@trustless-work/escrow` 5.x: provider setup, the build/sign/submit loop, every hook, and the new GraphQL hooks.
+
+### JavaScript SDK — V2 (beta)
+- Read **[skills/js-sdk/js-sdk.md](skills/js-sdk/js-sdk.md)** when the integration is **not** React — Node, NestJS, Angular, browser, scripts. `@trustless-work/escrow-js` is framework-agnostic, zero-dependency, and V2-only.
 
 ### React SDK
 - Read **[skills/react-sdk/react-sdk.md](skills/react-sdk/react-sdk.md)** for SDK setup, provider config, and hook overview.
