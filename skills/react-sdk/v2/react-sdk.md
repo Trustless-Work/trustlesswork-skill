@@ -106,7 +106,7 @@ A few hooks are multi-release only and take no type, because the operation does 
 | --- | --- | --- | --- |
 | `useDeployEscrow` | `deployEscrow(payload, type, attribution?)` | `signer` | Accepts optional attribution headers |
 | `useFundEscrow` | `fundEscrow(payload, type)` | any depositor | |
-| `useUpdateEscrow` | `updateEscrow(payload, type)` | `admin` | Zero balance only |
+| `useUpdateEscrow` | `updateEscrow(payload, type)` | `admin` | Only before the first fund (lock is cumulative `FundedAmount`, never resets) |
 | `useManageMilestones` | `manageMilestones(payload, type)` | `admin` | Add or edit milestones |
 | `useChangeMilestoneStatus` | `changeMilestoneStatus(payload, type)` | a service provider | Batched `updates` |
 | `useApproveMilestones` | `approveMilestones(payload, type)` | an approver | One vote per listed milestone |
