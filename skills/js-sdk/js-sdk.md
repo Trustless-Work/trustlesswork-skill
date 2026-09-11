@@ -104,7 +104,9 @@ Same surface as the React SDK, reached through `client.rest` and `client.graphql
 
 `deployEscrow(payload, type, attribution?)` · `fundEscrow(payload, type)` · `updateEscrow(payload, type)` · `manageMilestones(payload, type)` · `changeMilestoneStatus(payload, type)` · `approveMilestones(payload, type)` · `approveAndReleaseMilestones(payload)` · `releaseFunds(payload, type)` · `releaseMilestones(payload)` · `startDispute(payload, type)` · `disputeMilestones(payload)` · `resolveDispute(payload, type)` · `withdrawRemainingFunds(payload, type)`
 
-`releaseMilestones` and `disputeMilestones` are multi-release only and take no `type`.
+`releaseMilestones`, `disputeMilestones` and `approveAndReleaseMilestones` are multi-release only and take no `type`. For the first two the operation does not exist on single-release; approve-and-release **does** exist there in the API (`POST /escrow/single-release/v2/approve-and-release-milestones`) — the SDK just does not wrap it, so call that route directly.
+
+`extend-ttl` is not wrapped either — call `POST /escrow/{type}/v2/extend-ttl` directly.
 
 ### Submit
 

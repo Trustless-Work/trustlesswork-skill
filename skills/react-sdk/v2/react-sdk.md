@@ -46,6 +46,8 @@ export function Providers({ children }: { children: React.ReactNode }) {
 
 `apiKey` and `getAccessToken` can coexist; the getter is re-read on each call, so it suits rotating tokens.
 
+> The package also exports `mainNet` and `development` host constants. Do **not** read them as environments: both point at the beta backend — through its internal hosting URL, not the branded host — and `mainNet` is not production (V2 is not on mainnet). Pass the explicit `baseURL` shown above instead.
+
 > SDK 5.x does **not** require a `QueryClientProvider`. It has no TanStack Query dependency — hooks return plain async functions, so you own the caching strategy.
 
 ---
@@ -96,7 +98,7 @@ type EscrowType = "single-release" | "multi-release";
 
 It must match the payload type you pass. A multi-release payload with `"single-release"` hits the wrong route and fails.
 
-A few hooks are multi-release only and take no type, because the operation does not exist for single-release: `releaseMilestones` and `disputeMilestones`.
+A few methods are multi-release only and take no type: `releaseMilestones`, `disputeMilestones` and `approveAndReleaseMilestones`. For the first two the operation does not exist on single-release. Approve-and-release is different: the API **does** expose `POST /escrow/single-release/v2/approve-and-release-milestones` — the SDK just does not wrap it, so for single-release call that route directly.
 
 ---
 
@@ -110,7 +112,7 @@ A few hooks are multi-release only and take no type, because the operation does 
 | `useManageMilestones` | `manageMilestones(payload, type)` | `admin` | Add or edit milestones |
 | `useChangeMilestoneStatus` | `changeMilestoneStatus(payload, type)` | a service provider | Batched `updates` |
 | `useApproveMilestones` | `approveMilestones(payload, type)` | an approver | One vote per listed milestone |
-| `useApproveAndReleaseMilestones` | `approveAndReleaseMilestones(payload)` | approver + release signer | |
+| `useApproveAndReleaseMilestones` | `approveAndReleaseMilestones(payload)` | approver + release signer | **Multi-release only** in the SDK (see above) |
 | `useReleaseFunds` | `releaseFunds(payload, type)` · `releaseMilestones(payload)` | a release signer | The second is multi-release only |
 | `useStartDispute` | `startDispute(payload, type)` · `disputeMilestones(payload)` | see below | `disputeMilestones` is multi-release only |
 | `useResolveDispute` | `resolveDispute(payload, type)` | a dispute resolver | |
@@ -120,6 +122,8 @@ A few hooks are multi-release only and take no type, because the operation does 
 > **The submit route changed.** V1 documents `POST /helper/send-transaction`. SDK 5.x posts to `/stellar/send-transaction`. Use `useSendTransaction` and you never have to hardcode it.
 
 Dispute permissions follow the contract: approvers, service providers, release signers, the platform and the receiver may open one. A dispute resolver may not — the contract rejects it.
+
+`extend-ttl` has **no hook** — neither SDK wraps it. When you need it, call `POST /escrow/{type}/v2/extend-ttl` directly.
 
 ## Read hooks
 
