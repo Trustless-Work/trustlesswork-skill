@@ -70,7 +70,7 @@ Fund the escrow as a whole. The canonical target is the sum of the milestone amo
 }
 ```
 
-Complete desired state, not a patch. `admin` only, and only while the balance is zero.
+Complete desired state for the escrow's **properties and roles** — **`milestones` in this payload is ignored**; the contract preserves the existing ones. Use `manage-milestones` for milestones. `admin` only, rejected while any milestone is disputed, and only **before the first `fund` call** — the lock is the cumulative funded amount, which never decreases.
 
 ## Manage milestones
 
@@ -89,7 +89,7 @@ Complete desired state, not a patch. `admin` only, and only while the balance is
 }
 ```
 
-Multi-release updates can change a milestone's **amount** as well as its description — single-release cannot, since the amount lives on the escrow. Amount changes are rejected once the contract holds funds.
+Multi-release updates can change a milestone's **amount** as well as its description — single-release cannot, since the amount lives on the escrow. **Every** milestone edit (description or amount) is rejected once the escrow has been funded; appending new milestones stays allowed until the escrow is released, disputed or resolved.
 
 A new milestone's `receiver` must not be the `admin` or any `disputeResolver`. The contract rejects that configuration.
 
@@ -164,7 +164,7 @@ Disputes specific milestones, leaving the rest of the escrow operative. Approver
 }
 ```
 
-Scoped to the named milestones. Distributions must be positive, must not exceed those milestones' amounts, and must not exceed the contract balance. They do **not** have to equal the full escrow balance — that rule is single-release only. Resolution is terminal.
+Scoped to the named milestones, which must each be disputed and not already resolved (duplicates in `milestoneIndexes` are rejected). Distributions: max 50 entries, every amount positive, and the total must equal the **combined amount of the named milestones exactly** (`DistributionsMustEqualEscrowBalance` otherwise) — not less, not more. The contract balance must cover that total. It does not have to equal the full escrow balance, since resolution is per milestone. Resolution is terminal for those milestones.
 
 ## Withdraw remaining funds
 
@@ -178,7 +178,7 @@ Scoped to the named milestones. Distributions must be positive, must not exceed 
 }
 ```
 
-Requires **every** milestone to be terminal — released or its dispute resolved. Fee-bearing, same as single-release.
+Requires **every** milestone to be terminal — released or its dispute resolved. The distributions must sum to the **entire remaining balance**: a full sweep, not a partial withdrawal. Fee-bearing, same as single-release.
 
 ## Extend TTL
 

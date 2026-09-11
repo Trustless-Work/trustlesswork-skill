@@ -63,7 +63,9 @@ Any address holding the asset may fund. Funding grants no role. The signer needs
 }
 ```
 
-The `escrow` object is the **complete** desired state, not a patch. Only `admin` may call it, and only while the contract balance is zero — once funded, properties and roles are frozen.
+The `escrow` object is the complete desired state for the escrow's **properties and roles** — but **`milestones` in this payload is ignored**: the contract preserves the existing milestones (and the dispute/released state). Change milestones through `manage-milestones` instead.
+
+Only `admin` may call it, it is rejected while a dispute is open, and it only works **before the first `fund` call**: the lock is the cumulative funded amount, which never decreases, so releasing funds does not make the escrow editable again.
 
 ## Manage milestones
 
@@ -136,7 +138,7 @@ Collapses approval and release into one transaction. Use it only when a single w
 { "contractId": "C...", "releaseSigner": "G..." }
 ```
 
-Requires **all** milestones approved and no active dispute. Pays the configured `amount` minus the platform fee and the Trustless Work protocol fee to `roles.receiver`. The contract balance must cover it.
+Requires **all** milestones approved and no active dispute. Pays the configured `amount` minus the platform fee and the Trustless Work protocol fee to `roles.receiver`. The contract balance must cover it. An escrow with **zero milestones cannot release** (`NoMilestoneDefined`) — add milestones first.
 
 ## Raise a dispute
 
@@ -163,7 +165,7 @@ Disputes the **whole escrow**. `reason` is required in v2 (v1 had none). Approve
 }
 ```
 
-Max 50 entries, every amount positive. Every recipient needs the asset's trustline. Resolution is terminal — a dispute cannot be reopened.
+Max 50 entries, every amount positive, and the total must equal the **entire current contract balance exactly** (`DistributionsMustEqualEscrowBalance` otherwise). The escrow must be disputed. Every recipient needs the asset's trustline. Resolution is terminal — a dispute cannot be reopened.
 
 ## Withdraw remaining funds
 
@@ -177,7 +179,7 @@ Max 50 entries, every amount positive. Every recipient needs the asset's trustli
 }
 ```
 
-Sweeps leftover balance — overfunding, stray transfers, rounding dust. In v2 the escrow must be genuinely terminal: `released` or the dispute `resolved`. An open dispute does **not** qualify (it did in v1).
+Sweeps leftover balance — overfunding, stray transfers, rounding dust. In v2 the escrow must be genuinely terminal: `released` or the dispute `resolved`. An open dispute does **not** qualify (it did in v1). The distributions must sum to the **entire remaining balance** — it is a full sweep, not a partial withdrawal, which v1 allowed.
 
 It is fee-bearing: each recipient's amount is reduced pro rata by the platform and protocol fees, and recipients receive the net.
 
