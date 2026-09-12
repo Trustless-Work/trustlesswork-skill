@@ -2,7 +2,7 @@
 
 # Trustless Work Development Skill
 
-> **Protocol version: V1.** This file documents the production V1 integration — the only version deployed on mainnet. The V2 Core API is documented separately in [skills/api/v2/](skills/api/v2/); the V2 React SDK is documented in [skills/react-sdk/v2/](skills/react-sdk/v2/react-sdk.md); the V2 Blocks surface is **not** documented yet. For the contract-level differences see [constitution.md](constitution.md).
+> **Protocol version: V1.** This file documents the production V1 integration — the only version deployed on mainnet. The V2 Core API is documented separately in [skills/api/v2/](trustless-work-dev/skills/api/v2/); the V2 React SDK is documented in [skills/react-sdk/v2/](trustless-work-dev/skills/react-sdk/v2/react-sdk.md); the V2 Blocks surface is **not** documented yet. For the contract-level differences see [constitution.md](trustless-work-dev/constitution.md).
 
 [View on skills.sh](https://www.skills.sh/trustless-work/trustlesswork-skill)
 
@@ -27,27 +27,39 @@ cp -r trustlesswork-skill ~/.cursor/skills/trustless-work-dev
 
 ```
 trustlesswork-skill/
-├── SKILL.md                    # Main skill definition (required)
 ├── README.md                   # Project documentation
 ├── LICENSE                     # Apache-2.0 License
-├── .gitignore                  # Git ignore file
-└── skills/                     # Skill documentation
-    ├── api/                    # REST API documentation
-    │   ├── core-concepts.md    # Roles, lifecycle, flags, API authentication
-    │   ├── types.md            # Complete TypeScript type definitions
-    │   ├── single-release-escrow.md # Single-release escrow implementation guide
-    │   ├── multi-release-escrow.md  # Multi-release escrow implementation guide
-    │   └── trustlines.md       # Stellar trustline configuration
-    ├── react-sdk/              # React SDK documentation
-    │   ├── react-sdk.md        # React SDK overview and quick reference
-    │   ├── hooks-reference.md  # Complete hooks documentation
-    │   └── vibe-coding.md      # AI context guide with prompts
-    └── blocks/                 # Blocks SDK documentation
-        ├── introduction.md     # Blocks SDK overview and installation
-        ├── vibe-coding.md      # AI context guide
-        ├── components.md       # Available UI components
-        ├── providers.md        # Provider setup and context API
-        └── hooks.md            # TanStack Query hooks
+└── trustless-work-dev/         # The skill — only this folder is installed
+    ├── SKILL.md                # Main skill definition (required)
+    ├── constitution.md         # Universal platform laws
+    └── skills/
+        ├── protocol/           # Contract semantics per version
+        │   ├── v1.md           # V1 profile (production, mainnet)
+        │   └── v2.md           # V2 profile (beta, testnet only)
+        ├── api/                # REST API documentation (V1)
+        │   ├── core-concepts.md
+        │   ├── types.md
+        │   ├── single-release-escrow.md
+        │   ├── multi-release-escrow.md
+        │   ├── trustlines.md
+        │   └── v2/             # Core API v2 (beta)
+        │       ├── core-concepts.md
+        │       ├── single-release.md
+        │       └── multi-release.md
+        ├── react-sdk/          # React SDK documentation (V1)
+        │   ├── react-sdk.md
+        │   ├── hooks-reference.md
+        │   ├── vibe-coding.md
+        │   └── v2/             # React SDK 5.x (v2, beta)
+        │       └── react-sdk.md
+        ├── js-sdk/             # JS SDK (v2-only, beta)
+        │   └── js-sdk.md
+        └── blocks/             # Blocks SDK documentation
+            ├── introduction.md
+            ├── vibe-coding.md
+            ├── components.md
+            ├── providers.md
+            └── hooks.md
 ```
 
 ## What This Skill Provides
@@ -154,26 +166,26 @@ npx trustless-work add escrows/escrows-by-signer/table
 ## Documentation Files
 
 ### Platform Laws
-- **[constitution.md](constitution.md)** - The Trustless Work Constitution: compressed agent-facing summary of role permissions, lifecycle preconditions, API rules, fees, and network rules — each statement tagged as contract-ENFORCED, CANONICAL workflow, SECURITY practice, or versioned FACT, under an explicit source-of-truth hierarchy. Agents should read this before designing any escrow flow.
+- **[constitution.md](trustless-work-dev/constitution.md)** - The Trustless Work Constitution: compressed agent-facing summary of role permissions, lifecycle preconditions, API rules, fees, and network rules — each statement tagged as contract-ENFORCED, CANONICAL workflow, SECURITY practice, or versioned FACT, under an explicit source-of-truth hierarchy. Agents should read this before designing any escrow flow.
 
 ### REST API
-- **[skills/api/core-concepts.md](skills/api/core-concepts.md)** - Overview, roles, lifecycle, API authentication, error handling
-- **[skills/api/types.md](skills/api/types.md)** - Complete TypeScript type definitions for all payloads (13+ types), responses, and errors with usage examples
-- **[skills/api/single-release-escrow.md](skills/api/single-release-escrow.md)** - Complete guide for single-release escrows with detailed REST API examples
-- **[skills/api/multi-release-escrow.md](skills/api/multi-release-escrow.md)** - Complete guide for multi-release escrows with detailed REST API examples
-- **[skills/api/trustlines.md](skills/api/trustlines.md)** - Stellar trustline setup, configuration, and best practices
+- **[skills/api/core-concepts.md](trustless-work-dev/skills/api/core-concepts.md)** - Overview, roles, lifecycle, API authentication, error handling
+- **[skills/api/types.md](trustless-work-dev/skills/api/types.md)** - Complete TypeScript type definitions for all payloads (13+ types), responses, and errors with usage examples
+- **[skills/api/single-release-escrow.md](trustless-work-dev/skills/api/single-release-escrow.md)** - Complete guide for single-release escrows with detailed REST API examples
+- **[skills/api/multi-release-escrow.md](trustless-work-dev/skills/api/multi-release-escrow.md)** - Complete guide for multi-release escrows with detailed REST API examples
+- **[skills/api/trustlines.md](trustless-work-dev/skills/api/trustlines.md)** - Stellar trustline setup, configuration, and best practices
 
 ### React SDK
-- **[skills/react-sdk/react-sdk.md](skills/react-sdk/react-sdk.md)** - React SDK overview, setup, and quick reference
-- **[skills/react-sdk/hooks-reference.md](skills/react-sdk/hooks-reference.md)** - Complete detailed documentation for all 10 hooks with full usage examples, parameters, return values, and complete code samples
-- **[skills/react-sdk/vibe-coding.md](skills/react-sdk/vibe-coding.md)** - Single-file AI context guide with global development rules, implementation prompts for all hooks, and step-by-step feature guides (essential for AI workflows)
+- **[skills/react-sdk/react-sdk.md](trustless-work-dev/skills/react-sdk/react-sdk.md)** - React SDK overview, setup, and quick reference
+- **[skills/react-sdk/hooks-reference.md](trustless-work-dev/skills/react-sdk/hooks-reference.md)** - Complete detailed documentation for all 10 hooks with full usage examples, parameters, return values, and complete code samples
+- **[skills/react-sdk/vibe-coding.md](trustless-work-dev/skills/react-sdk/vibe-coding.md)** - Single-file AI context guide with global development rules, implementation prompts for all hooks, and step-by-step feature guides (essential for AI workflows)
 
 ### Blocks SDK
-- **[skills/blocks/introduction.md](skills/blocks/introduction.md)** - Blocks SDK overview, installation, and context API
-- **[skills/blocks/vibe-coding.md](skills/blocks/vibe-coding.md)** - Single-file AI context guide with project bootstrap, provider order, CLI commands, examples, and troubleshooting (essential for AI workflows)
-- **[skills/blocks/components.md](skills/blocks/components.md)** - Available UI components and usage examples
-- **[skills/blocks/providers.md](skills/blocks/providers.md)** - Provider setup and configuration
-- **[skills/blocks/hooks.md](skills/blocks/hooks.md)** - TanStack Query hooks for fetching and mutating escrows
+- **[skills/blocks/introduction.md](trustless-work-dev/skills/blocks/introduction.md)** - Blocks SDK overview, installation, and context API
+- **[skills/blocks/vibe-coding.md](trustless-work-dev/skills/blocks/vibe-coding.md)** - Single-file AI context guide with project bootstrap, provider order, CLI commands, examples, and troubleshooting (essential for AI workflows)
+- **[skills/blocks/components.md](trustless-work-dev/skills/blocks/components.md)** - Available UI components and usage examples
+- **[skills/blocks/providers.md](trustless-work-dev/skills/blocks/providers.md)** - Provider setup and configuration
+- **[skills/blocks/hooks.md](trustless-work-dev/skills/blocks/hooks.md)** - TanStack Query hooks for fetching and mutating escrows
 
 ## MCP Integration
 
