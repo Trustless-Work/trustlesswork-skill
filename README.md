@@ -31,6 +31,7 @@ trustlesswork-skill/
 ├── LICENSE                     # Apache-2.0 License
 └── trustless-work-dev/         # The skill — only this folder is installed
     ├── SKILL.md                # Main skill definition (required)
+    ├── LICENSE                 # Apache-2.0 (ships with installed copies)
     ├── constitution.md         # Universal platform laws
     └── skills/
         ├── protocol/           # Contract semantics per version
