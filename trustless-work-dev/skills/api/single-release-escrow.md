@@ -300,7 +300,7 @@ export const fundEscrow = async (contractId: string, amount: number) => {
 
 **Endpoint:** `POST /escrow/single-release/change-milestone-status`
 
-Service Provider updates the status and evidence of a milestone.
+Service Provider updates the status and evidence of a milestone. Rejected once the escrow is released or resolved (`EscrowAlreadyReleased`/`EscrowAlreadyResolved`); still allowed while a dispute is open. (Contract lineage from 2026-09-15 onward.)
 
 ### Request Schema
 
