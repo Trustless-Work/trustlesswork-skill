@@ -105,7 +105,7 @@ A new milestone's `receiver` must not be the `admin` or any `disputeResolver`. T
 }
 ```
 
-Same rules as single-release: `newStatus` max 50 chars, `newEvidence` optional, max 500.
+Same rules as single-release: `newStatus` max 50 chars, `newEvidence` optional, max 500. Updates are **rejected for a milestone that is `released` or has its dispute `resolved`** (`MilestoneAlreadyReleased` = 16 / `MilestoneAlreadyResolved` = 17); they stay allowed while that milestone's dispute is open.
 
 ## Approve milestones
 

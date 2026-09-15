@@ -468,7 +468,7 @@ export const approveMilestone = async (
 
 **Endpoint:** `POST /escrow/multi-release/change-milestone-status`
 
-Service Provider updates the status and evidence of a milestone.
+Service Provider updates the status and evidence of a milestone. Rejected for a milestone that is released or resolved (`MilestoneAlreadyReleased`/`MilestoneAlreadyResolved`); still allowed while that milestone's dispute is open. (Contract lineage from 2026-09-15 onward.)
 
 ### Request Schema
 
