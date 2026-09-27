@@ -148,7 +148,6 @@ Supply `contractId`, or supply both `symbol` and `address`. When `contractId` is
 | `milestoneIndexes` | `number[]` | **Numbers, not strings.** v1's `milestoneIndex` was a string; v2 takes an array of numbers. |
 | `approvalsTarget` | `number` | Integer ≥ 1. |
 | `ledgersToExtend` | `number` | Integer. |
-| `receiverMemo` | `number` | Optional, u32 on-chain. |
 | Addresses | `string` | `G…` accounts, `C…` contracts. |
 
 ## Field limits at deploy
@@ -161,6 +160,58 @@ Supply `contractId`, or supply both `symbol` and `address`. When `contractId` is
 | `milestones` | max 50 entries |
 
 > These differ from v1, which caps `title` at 100 and `description` at 500. Do not reuse v1 limits.
+
+## Receiver trustline preflight
+
+Before building the transaction, the API checks that every address that can **receive funds** from the escrow holds a trustline for the escrow token. Roles that never receive funds (approvers, service providers, release signers, dispute resolvers, admin, observers) are not checked.
+
+| Endpoint | Addresses checked |
+| --- | --- |
+| Single-release `deploy`, `update` | `roles.receiver`, plus `roles.platform` when `platformFee > 0` |
+| Multi-release `deploy` | every `milestones[].receiver`, plus `roles.platform` when `platformFee > 0` |
+| Multi-release `update` | `roles.platform` when `platformFee > 0` (the payload's milestones are ignored on-chain, so their receivers are not checked) |
+| Multi-release `manage-milestones` | every `newMilestones[].receiver` |
+
+A failure returns **422 `ESCROW_RECEIVER_TRUSTLINE_MISSING`**. `extensions.missing` names each address, the roles it plays, and the reason:
+
+```jsonc
+{
+  "type": "https://docs.trustlesswork.com/trustless-work/v2-en/api-rest/errors/escrow-receiver-trustline-missing",
+  "status": 422,
+  "code": "ESCROW_RECEIVER_TRUSTLINE_MISSING",
+  "detail": "Every role that can receive escrow funds must hold a trustline for the escrow token — ...",
+  "extensions": {
+    "trustline": "C...",
+    "missing": [
+      { "address": "G...", "roles": ["roles.receiver"], "reason": "trustline-missing" },
+      { "address": "G...", "roles": ["milestones[1].receiver"], "reason": "account-missing" }
+    ]
+  }
+}
+```
+
+- `trustline-missing`: the account exists but has no trustline for the escrow token. Add the trustline, then retry.
+- `account-missing`: the account does not exist on this network. Fund it with XLM first, then add the trustline.
+
+## Token errors
+
+Fund, release, resolve and withdraw call the escrow's token contract. Errors that the **token** raises are reported as `TOKEN_*` codes, never as escrow codes. The most common one is `TOKEN_TRUSTLINE_MISSING` (422) on `fund`, when the signer has no trustline for the asset or the account does not exist yet.
+
+| Code | Status | Meaning |
+| --- | --- | --- |
+| `TOKEN_TRUSTLINE_MISSING` | 422 | The account has no trustline for the token, or does not exist yet. |
+| `TOKEN_BALANCE_INSUFFICIENT` | 409 | The token balance is too low for the transfer. |
+| `TOKEN_BALANCE_DEAUTHORIZED` | 403 | The asset issuer deauthorized the trustline. |
+| `TOKEN_ACCOUNT_MISSING` | 422 | The account does not exist on this network. |
+| `TOKEN_ACCOUNT_NOT_CLASSIC` | 422 | The address is not a classic Stellar account. |
+| `TOKEN_NEGATIVE_AMOUNT` | 422 | A token amount was negative. |
+| `TOKEN_ALLOWANCE_ERROR` | 409 | The allowance is insufficient or invalid. |
+| `TOKEN_UNAUTHORIZED` / `TOKEN_AUTHENTICATION_ERROR` | 403 | The token rejected the caller or its authorization. |
+| `TOKEN_OPERATION_NOT_SUPPORTED` | 422 | The token does not support the operation. |
+| `TOKEN_ALREADY_INITIALIZED` | 409 | The token contract is already initialized. |
+| `TOKEN_INTERNAL_ERROR` / `TOKEN_OVERFLOW` | 500 | Internal failure inside the token contract. |
+
+Every error response carries a `type` URL pointing to its documentation page: `https://docs.trustlesswork.com/trustless-work/v2-en/api-rest/errors/<code-in-kebab-case>` (for example `.../errors/token-trustline-missing`). Branch on `code`, never on `message`.
 
 ---
 

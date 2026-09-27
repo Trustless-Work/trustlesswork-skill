@@ -32,12 +32,13 @@ Everything else — auth, the build/sign/submit pattern, role composition rules,
   "milestones": [                         // OPTIONAL — may be empty or absent
     { "description": "Tranche 1", "amount": 500, "receiver": "G...", "approvalsTarget": 1 },
     { "description": "Tranche 2", "amount": 500, "receiver": "G...", "approvalsTarget": 2 }
-  ],
-  "receiverMemo": 0
+  ]
 }
 ```
 
 Each milestone needs `description`, `amount` (> 0) and `receiver`. Max 50.
+
+Every milestone `receiver`, and `roles.platform` when `platformFee > 0`, must hold the asset's trustline, or the API returns `ESCROW_RECEIVER_TRUSTLINE_MISSING` (422). See [Receiver trustline preflight](core-concepts.md#receiver-trustline-preflight).
 
 ## Fund
 
@@ -47,7 +48,7 @@ Each milestone needs `description`, `amount` (> 0) and `receiver`. Max 50.
 { "contractId": "C...", "signer": "G...", "amount": 1000 }
 ```
 
-Fund the escrow as a whole. The canonical target is the sum of the milestone amounts.
+Fund the escrow as a whole. The canonical target is the sum of the milestone amounts. A signer without the asset's trustline (or whose account does not exist yet) gets `TOKEN_TRUSTLINE_MISSING` (422). See [Token errors](core-concepts.md#token-errors).
 
 ## Update properties
 
@@ -62,7 +63,6 @@ Fund the escrow as a whole. The canonical target is the sum of the milestone amo
     "title": "...",
     "description": "...",
     "platformFee": 1,
-    "receiverMemo": 0,
     "roles": { /* full roles object, no receiver */ },
     "milestones": [ /* full milestones array */ ],
     "trustline": { /* trustline object */ }
@@ -71,6 +71,8 @@ Fund the escrow as a whole. The canonical target is the sum of the milestone amo
 ```
 
 Complete desired state for the escrow's **properties and roles** — **`milestones` in this payload is ignored**; the contract preserves the existing ones. Use `manage-milestones` for milestones — but the API still **requires** the array (1–50 entries): send the existing milestones back, omitting the field fails validation. `admin` only, rejected while any milestone is disputed, and only **before the first `fund` call** — the lock is the cumulative funded amount, which never decreases.
+
+Trustline preflight: only `roles.platform`, when `platformFee > 0`. The payload's milestone receivers are not checked because the contract ignores them.
 
 ## Manage milestones
 
@@ -91,7 +93,7 @@ Complete desired state for the escrow's **properties and roles** — **`mileston
 
 Multi-release updates can change a milestone's **amount** as well as its description (`newDescription` max 500 chars) — single-release cannot, since the amount lives on the escrow. **Every** milestone edit (description or amount) is rejected once the escrow has been funded; appending new milestones stays allowed until the escrow is released, disputed or resolved.
 
-A new milestone's `receiver` must not be the `admin` or any `disputeResolver`. The contract rejects that configuration.
+A new milestone's `receiver` must not be the `admin` or any `disputeResolver`. The contract rejects that configuration. It must also hold the asset's trustline, or the API returns `ESCROW_RECEIVER_TRUSTLINE_MISSING` (422).
 
 ## Change milestone status
 

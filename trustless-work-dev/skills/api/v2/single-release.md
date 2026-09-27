@@ -24,12 +24,13 @@ Single-release pays out **once**, to a single `roles.receiver`, after the requir
   "trustline": { "symbol": "USDC", "address": "G..." },
   "milestones": [                         // OPTIONAL in v2 — may be empty or absent
     { "description": "Phase 1", "approvalsTarget": 1 }
-  ],
-  "receiverMemo": 0                       // optional
+  ]
 }
 ```
 
 Deploying with no milestones is valid; add them later with `manage-milestones`. Max 50 when present.
+
+`roles.receiver`, and `roles.platform` when `platformFee > 0`, must hold the asset's trustline, or the API returns `ESCROW_RECEIVER_TRUSTLINE_MISSING` (422). See [Receiver trustline preflight](core-concepts.md#receiver-trustline-preflight).
 
 ## Fund
 
@@ -39,7 +40,7 @@ Deploying with no milestones is valid; add them later with `manage-milestones`. 
 { "contractId": "C...", "signer": "G...", "amount": 1000 }
 ```
 
-Any address holding the asset may fund. Funding grants no role. The signer needs the asset's trustline.
+Any address holding the asset may fund. Funding grants no role. The signer needs the asset's trustline; without it (or if the account does not exist yet) the API returns `TOKEN_TRUSTLINE_MISSING` (422). See [Token errors](core-concepts.md#token-errors).
 
 ## Update properties
 
@@ -55,7 +56,6 @@ Any address holding the asset may fund. Funding grants no role. The signer needs
     "description": "...",
     "amount": 1000,
     "platformFee": 1,
-    "receiverMemo": 0,
     "roles": { /* full roles object */ },
     "milestones": [ /* full milestones array */ ],
     "trustline": { /* trustline object */ }
@@ -66,6 +66,8 @@ Any address holding the asset may fund. Funding grants no role. The signer needs
 The `escrow` object is the complete desired state for the escrow's **properties and roles** — but **`milestones` in this payload is ignored**: the contract preserves the existing milestones (and the dispute/released state). Change milestones through `manage-milestones` instead. The API still **requires** the array (1–50 entries) even though the contract ignores it — send the existing milestones back; omitting the field fails validation before reaching the contract.
 
 Only `admin` may call it, it is rejected while a dispute is open, and it only works **before the first `fund` call**: the lock is the cumulative funded amount, which never decreases, so releasing funds does not make the escrow editable again.
+
+The same trustline preflight as deploy applies: `roles.receiver`, and `roles.platform` when `platformFee > 0`.
 
 ## Manage milestones
 
