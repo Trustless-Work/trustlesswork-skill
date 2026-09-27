@@ -100,7 +100,7 @@ Appends new milestones and edits existing descriptions (`newDescription` max 500
 }
 ```
 
-Batched. Status is free text (max 50 chars) and moves no funds; convention is `pending → in_progress → completed`. `newEvidence` is optional, max 500 chars.
+Batched. Status is free text (max 50 chars) and moves no funds; convention is `pending → in_progress → completed`. `newEvidence` is optional, max 500 chars. Updates are **rejected once the escrow is `released` or its dispute `resolved`** (`EscrowAlreadyReleased` = 16 / `EscrowAlreadyResolved` = 17); they stay allowed while a dispute is open.
 
 ## Approve milestones
 
