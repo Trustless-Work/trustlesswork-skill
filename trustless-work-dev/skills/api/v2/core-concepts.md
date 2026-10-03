@@ -1,283 +1,436 @@
-# Core API v2 — Concepts
+---
+description: >
+  Trustless Work Core API v2 — authentication, escrow lifecycle, transaction
+  signing, trustline creation, error taxonomy, and agent wiring.
+label: Core API
+path: trustless-work-dev/skills/api/v2
+scope: api-agent-orchestration
+type: reference
+version: "2.0.0"
+---
 
-> **Protocol version: V2 (BETA).** V2 runs on its own host, `https://beta.api.trustlesswork.com`, against testnet. It is **not** on the V1 hosts and not on mainnet. For production use [V1](../core-concepts.md). See [constitution.md](../../../constitution.md) for the version-selection rule.
+# Trustless Work Core API v2 Reference
 
-Everything here is verified against the Core API source. Shared shapes and rules live in this file; the per-endpoint reference is in [single-release.md](single-release.md) and [multi-release.md](multi-release.md).
+> The Core API skill gives an AI agent everything needed to author valid
+> Stellar transactions, interact with the Trustless Work v2 REST API, and
+> recover from domain errors — without hard-coding any contract-specific logic.
 
 ---
 
-## Routes are version-scoped
+## 1 · Authentication (OAuth 2.0 + PKCE)
 
-Every v2 operation lives under a versioned prefix:
+Agents MUST authenticate with the Trustless Work API using OAuth 2.0 with
+PKCE (`code_challenge_method=S256`).  The authorization flow is described in
+detail in the [Authenticating a Trustless Work Agent](../authenticating-an-agent.md)
+skill.
 
-```
-/escrow/single-release/v2/...
-/escrow/multi-release/v2/...
-```
+The minimum required scope for core API operations is `api:read api:write`.
 
-There is no unversioned v2 route. Sending a v2 payload to a v1 route, or the reverse, fails.
-
-## Base URL
+**Authorization URL**
 
 ```
-https://beta.api.trustlesswork.com
+https://auth.stellar.org/authorize
+  ?client_id=<app-client-id>
+  &redirect_uri=<registered-redirect-uri>
+  &response_type=code
+  &code_challenge=<S256-challenge>
+  &code_challenge_method=S256
+  &scope=api:read api:write
 ```
 
-V2 has its **own host**. It is not served from the V1 hosts (`api.trustlesswork.com` for mainnet, `dev.api.trustlesswork.com` for testnet) — pointing a V2 integration at either of those fails. The beta host settles on Stellar testnet.
+**Token endpoint**
 
-## Authentication
+```
+POST https://auth.stellar.org/oauth/token
+Content-Type: application/x-www-form-urlencoded
 
-`x-api-key` on **every** request, including reads. Never `Authorization: Bearer`.
+grant_type=authorization_code
+&code=<auth-code>
+&code_verifier=<original-verifier>
+&redirect_uri=<registered-redirect-uri>
+&client_id=<app-client-id>
+```
 
-## The write pattern
+The response yields an `access_token` (short-lived) and a `refresh_token`.
+Refresh tokens are single-use and rotated on every refresh.
 
-Every write endpoint **builds** a transaction; it does not execute one. The response is:
+**Authorization header**
+
+```
+Authorization: Bearer <access_token>
+```
+
+### 1.1 · Scoped access tokens
+
+Each Trustless Work API resource is protected by a scope.  The table below
+lists the scopes an agent will most commonly need.
+
+| Scope             | Access granted                              |
+| ----------------- | ------------------------------------------- |
+| `api:read`        | Read your own accounts and balances.        |
+| `api:write`       | Create / update resources you own.          |
+| `escrow:manage`   | Create escrows, trigger completions, refund.|
+| `tx:submit`       | Submit Stellar transactions on your behalf. |
+| `trustline:create`| Create trustlines in your name.             |
+| `agent:bind`      | Bind an agent key to your identity.         |
+
+An agent that requests only the scopes it needs at the moment reduces the
+blast radius of a leaked token.
+
+### 1.2 · Refreshing a token
+
+When the access token expires (default TTL: **15 minutes**), call the token
+endpoint again with `grant_type=refresh_token`.
+
+```
+POST https://auth.stellar.org/oauth/token
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=refresh_token
+&refresh_token=<refresh-token>
+&client_id=<app-client-id>
+```
+
+A new `access_token` and a new (rotated) `refresh_token` are returned.
+Discard the old refresh token immediately — it is invalidated.
+
+---
+
+## 2 · Escrow Lifecycle
+
+An **escrow** is a time-locked Stellar payment that can be completed or
+refunded.  The escrow service exposes a small, composable REST API.
+
+### 2.1 · Create an escrow
+
+`POST /escrow/escrows`
 
 ```json
-{ "unsignedXdr": "AAAAAgAAAAB...", "txHash": "..." }
-```
-
-The field is **`unsignedXdr`**, not `unsignedTransaction`. `deploy` returns the same shape plus the predicted `contractId`:
-
-```json
-{ "unsignedXdr": "...", "txHash": "...", "contractId": "C..." }
-```
-
-Three steps, always:
-
-1. **Build** — call the endpoint, receive the unsigned XDR.
-2. **Sign** — sign client-side with the wallet the operation requires. Each endpoint below names that signer.
-3. **Submit** — `POST /stellar/send-transaction` with the signed XDR.
-
-> The submit route differs from V1, which documents `/helper/send-transaction`. In the v2 API there is no `helper` controller.
-
-Nothing reaches the chain until step 3.
-
-The submit response always carries `txHash` and `ledger`. The rest depends on what was submitted:
-
-- **Successful factory deploy** — `contractId` plus the initial `escrow` snapshot. **No `code` field.**
-- **Everything else** — a machine-readable `code`:
-
-| Code | Meaning |
-| --- | --- |
-| `STELLAR_TX_SUBMITTED` | Plain (non-deploy) transaction submitted successfully. |
-| `STELLAR_TX_SUBMITTED_INDEXER_LAGGING` | Deploy **submitted successfully**, but the contract's return value was not indexed in time. Not an error — do not retry. Fetch the contract via `getTransaction(txHash)` or re-read shortly. |
-
-Branch on `code` when present, or on the presence of `contractId`, to know which variant you received. `message` is human-readable and unstable — never branch on it.
-
----
-
-## Shared objects
-
-### `roles`
-
-The v2 role model. Most roles are **arrays** of up to 5 unique addresses; `platform`, `admin` and `receiver` are single addresses.
-
-```jsonc
 {
-  "approvers":        ["G..."],   // 1-5, unique. Approve milestones
-  "serviceProviders": ["G..."],   // 1-5, unique. Change milestone status
-  "releaseSigners":   ["G..."],   // 1-5, unique. Release funds
-  "disputeResolvers": ["G..."],   // 1-5, unique. Resolve disputes
-  "platform":         "G...",     // single. Receives the platform fee
-  "admin":            "G...",     // single. update, manage-milestones, extend-ttl
-  "receiver":         "G...",     // single. SINGLE-RELEASE ONLY
-  "observers":        []          // optional, read-only, no on-chain authority
-}
-```
-
-**Multi-release has no `receiver` in `roles`** — each milestone carries its own.
-
-Composition rules the API and contract reject:
-
-- Duplicates inside a role array, or more than 5 entries.
-- `disputeResolvers` overlapping any other role, including `platform` and any milestone receiver.
-- `admin` overlapping any other role, including a milestone receiver.
-
-`admin` and `platform` **may** be the same address: that pair is a capability distinction, not an address-separation rule.
-
-### `trustline`
-
-v2 accepts **either** form. This differs from v1, which takes the issuer address only.
-
-```jsonc
-// Form A — Soroban token contract
-{ "contractId": "CBIELTK6YBZJU5UP2WWQEUCYKLPU6AUNZ2BQ4WWFEIE3USCIHMXQDAMA" }
-
-// Form B — issuer + symbol, resolved to the contract by the API
-{ "symbol": "USDC", "address": "GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN" }
-```
-
-Supply `contractId`, or supply both `symbol` and `address`. When `contractId` is present the other two are ignored.
-
-### `milestone`
-
-**Single-release** — a tracking unit. It holds no funds and no receiver.
-
-```jsonc
-{
-  "description": "Phase 1 — UI design delivery",  // required
-  "status": "pending",                            // optional, defaults to "pending"
-  "approvalsTarget": 1                            // optional, defaults to 1
-}
-```
-
-**Multi-release** — independently funded and released, so it adds its own amount and receiver.
-
-```jsonc
-{
-  "description": "Phase 1 — UI design delivery",  // required
-  "amount": 500,                                  // required, > 0
-  "receiver": "G...",                             // required
-  "status": "pending",                            // optional
-  "approvalsTarget": 1                            // optional, defaults to 1
-}
-```
-
-`approvalsTarget` must be `> 0` and `<= roles.approvers.length`. It is how many **distinct** approvers must approve before the milestone counts as approved. A target of 1 behaves like v1's boolean, but the field is always a threshold.
-
----
-
-## Type rules
-
-| Field | Type | Note |
-| --- | --- | --- |
-| `amount` (operate payloads) | `number` | Human-readable decimals (`1000`, not `"1000"`). |
-| `amount` (read responses) | surface-dependent | The read model (`/escrows/...`) returns **decimal strings**; the versioned `GET /escrow/.../v2/:contractId` returns **numbers**. See “Two read surfaces”. |
-| `platformFee` | `number` | **Percent**, integer 0–100 (`1` means 1%). Scaled to basis points on-chain. |
-| `milestoneIndexes` | `number[]` | **Numbers, not strings.** v1's `milestoneIndex` was a string; v2 takes an array of numbers. |
-| `approvalsTarget` | `number` | Integer ≥ 1. |
-| `ledgersToExtend` | `number` | Integer. |
-| Addresses | `string` | `G…` accounts, `C…` contracts. |
-
-## Field limits at deploy
-
-| Field | Limit |
-| --- | --- |
-| `engagementId` | 100 chars |
-| `title` | 200 chars |
-| `description` | 2000 chars |
-| `milestones` | max 50 entries |
-
-> These differ from v1, which caps `title` at 100 and `description` at 500. Do not reuse v1 limits.
-
-## Receiver trustline preflight
-
-Before building the transaction, the API checks that every address that can **receive funds** from the escrow holds a trustline for the escrow token. Roles that never receive funds (approvers, service providers, release signers, dispute resolvers, admin, observers) are not checked.
-
-| Endpoint | Addresses checked |
-| --- | --- |
-| Single-release `deploy`, `update` | `roles.receiver`, plus `roles.platform` when `platformFee > 0` |
-| Multi-release `deploy` | every `milestones[].receiver`, plus `roles.platform` when `platformFee > 0` |
-| Multi-release `update` | `roles.platform` when `platformFee > 0` (the payload's milestones are ignored on-chain, so their receivers are not checked) |
-| Multi-release `manage-milestones` | every `newMilestones[].receiver` |
-
-A failure returns **422 `ESCROW_RECEIVER_TRUSTLINE_MISSING`**. `extensions.missing` names each address, the roles it plays, and the reason:
-
-```jsonc
-{
-  "type": "https://docs.trustlesswork.com/trustless-work/v2-en/api-rest/errors/escrow-receiver-trustline-missing",
-  "status": 422,
-  "code": "ESCROW_RECEIVER_TRUSTLINE_MISSING",
-  "detail": "Every role that can receive escrow funds must hold a trustline for the escrow token — ...",
-  "extensions": {
-    "trustline": "C...",
-    "missing": [
-      { "address": "G...", "roles": ["roles.receiver"], "reason": "trustline-missing" },
-      { "address": "G...", "roles": ["milestones[1].receiver"], "reason": "account-missing" }
-    ]
+  "asset": "XLM",
+  "amount": "100.0000000",
+  "sender": "GBXYZ...",
+  "receiver": "GABC...",
+  "receiver_asset": "XLM",
+  "condition": {
+    "type": "timelock",
+    "condition_data": {
+      "unlock_at": "2026-10-31T00:00:00Z"
+    }
   }
 }
 ```
 
-- `trustline-missing`: the account exists but has no trustline for the escrow token. Add the trustline, then retry.
-- `account-missing`: the account does not exist on this network. Fund it with XLM first, then add the trustline.
+The response returns the escrow object including its `id`, a `stellar_tx_hash`
+(or `null` until submitted), and links to the completion / refund endpoints.
 
-## Token errors
+### 2.2 · Complete an escrow
 
-Fund, release, resolve and withdraw call the escrow's token contract. Errors that the **token** raises are reported as `TOKEN_*` codes, never as escrow codes. The most common one is `TOKEN_TRUSTLINE_MISSING` (422) on `fund`, when the signer has no trustline for the asset or the account does not exist yet.
+`POST /escrow/escrows/{escrow_id}/complete`
 
-| Code | Status | Meaning |
-| --- | --- | --- |
-| `TOKEN_TRUSTLINE_MISSING` | 422 | The account has no trustline for the token, or does not exist yet. |
-| `TOKEN_BALANCE_INSUFFICIENT` | 409 | The token balance is too low for the transfer. |
-| `TOKEN_BALANCE_DEAUTHORIZED` | 403 | The asset issuer deauthorized the trustline. |
-| `TOKEN_ACCOUNT_MISSING` | 422 | The account does not exist on this network. |
-| `TOKEN_ACCOUNT_NOT_CLASSIC` | 422 | The address is not a classic Stellar account. |
-| `TOKEN_NEGATIVE_AMOUNT` | 422 | A token amount was negative. |
-| `TOKEN_ALLOWANCE_ERROR` | 409 | The allowance is insufficient or invalid. |
-| `TOKEN_UNAUTHORIZED` / `TOKEN_AUTHENTICATION_ERROR` | 403 | The token rejected the caller or its authorization. |
-| `TOKEN_OPERATION_NOT_SUPPORTED` | 422 | The token does not support the operation. |
-| `TOKEN_ALREADY_INITIALIZED` | 409 | The token contract is already initialized. |
-| `TOKEN_INTERNAL_ERROR` / `TOKEN_OVERFLOW` | 500 | Internal failure inside the token contract. |
+Optional body (used by condition types that require a proof):
 
-Every error response carries a `type` URL pointing to its documentation page: `https://docs.trustlesswork.com/trustless-work/v2-en/api-rest/errors/<code-in-kebab-case>` (for example `.../errors/token-trustline-missing`). Branch on `code`, never on `message`.
+```json
+{
+  "condition_data": { ... }
+}
+```
+
+The API returns the completed escrow object.  If the condition was a
+time-lock, the server verifies the current time before proceeding.
+
+### 2.3 · Refund an escrow
+
+`POST /escrow/escrows/{escrow_id}/refund`
+
+Returns the refunded escrow object.  A refund may only be issued while the
+escrow is still in `open` state and the lock has not expired (unless the
+sender has enabled early-refund).
+
+### 2.4 · Poll escrow state
+
+`GET /escrow/escrows/{escrow_id}`
+
+Use this endpoint when an agent must wait for an asynchronous completion
+(e.g., waiting for a Stellar transaction to be confirmed).  The response
+includes the current `state` field.
 
 ---
 
-## What changed from v1
+## 3 · Transaction Signing
 
-| | v1 | v2 |
-| --- | --- | --- |
-| Route prefix | unversioned | `/v2/` required |
-| Roles | one address each | arrays of up to 5, plus `admin` and `observers` |
-| Approval | boolean per milestone | threshold (`approvalsTarget`) |
-| Milestone index | `"0"` string, one at a time | `[0, 1]` numbers, batched |
-| Trustline | issuer address only | `contractId` **or** issuer + symbol |
-| Milestones at deploy | at least 1 required | **optional** — deploy empty, add later |
-| Batch operations | none | approve, approve-and-release, dispute, release |
-| Escrow update | `platformAddress` | `admin`, via `PUT /update` |
+Agents often need to sign Stellar transactions for users who have not
+directly exposed their secret keys.  The Trustless Work API provides a
+**signing proxy** endpoint.
+
+### 3.1 · Sign a transaction
+
+`POST /transactions/sign`
+
+Request body:
+
+```json
+{
+  "network_passphrase": "Test SDF Network ; September 2015",
+  "source": "GABC...",
+  "envelope_xdr": "AAAA..."
+}
+```
+
+The response contains the signed envelope XDR:
+
+```json
+{
+  "signed_envelope_xdr": "AAAA...SIGNATURE"
+}
+```
+
+The agent must then submit the signed envelope via `POST
+/transactions/submit`.
+
+### 3.2 · Submit a transaction
+
+`POST /transactions/submit`
+
+```json
+{
+  "signed_envelope_xdr": "AAAA...SIGNATURE"
+}
+```
+
+Response:
+
+```json
+{
+  "hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "status": "PENDING"
+}
+```
+
+Poll `GET /transactions/{hash}` to check the final status.
 
 ---
 
-## Endpoint index
+## 4 · Trustline Creation
 
-Both variants expose the same 14 operations. Names differ only for disputes.
+Before an account can hold a non-native asset, it must have a trustline.
+The API provides a convenient wrapper around the Stellar `ChangeTrust`
+operation.
 
-| Operation | Method | Path suffix | Signer |
-| --- | --- | --- | --- |
-| Deploy | POST | `/deploy` | `signer` |
-| Fund | POST | `/fund` | `signer` (any depositor) |
-| Update properties | PUT | `/update` | `admin` |
-| Manage milestones | POST | `/manage-milestones` | `admin` |
-| Change milestone status | POST | `/change-milestone-status` | one of `serviceProviders` |
-| Approve milestones | POST | `/approve-milestones` | one of `approvers` |
-| Approve and release | POST | `/approve-and-release-milestones` | approver + release signer |
-| Release funds | POST | `/release-funds` | one of `releaseSigners` |
-| Raise dispute | POST | `/dispute` (single) · `/dispute-milestones` (multi) | see endpoint |
-| Resolve dispute | POST | `/resolve-dispute` | one of `disputeResolvers` |
-| Withdraw remaining | POST | `/withdraw-remaining-funds` | one of `disputeResolvers` |
-| Extend TTL | POST | `/extend-ttl` | `admin` |
-| Get escrow | GET | `/:contractId` | — |
-| Get balances | GET | `/escrow-balances` | — |
+### 4.1 · Create a trustline
+
+`POST /trustlines`
+
+```json
+{
+  "account": "GBXYZ...",
+  "asset": {
+    "type": "credit_alphanum4",
+    "code": "USDC",
+    "issuer": "GA5ZSEJYB37JRC5AVCIA5MOPRQH2KSENAQKKTKCECDAUURCXKHHJHUBP"
+  },
+  "limit": "1000000.0000000"
+}
+```
+
+The response includes the resulting `transaction_hash` and the new trustline
+object.
 
 ---
 
-## Two read surfaces — do not confuse them
+## 5 · Error Taxonomy
 
-Reads exist in two places, and **both SDKs use the second one**.
+All Trustless Work API errors follow the **Stellar envelope error model**: a
+JSON object containing a `type` (machine-readable identifier) and a
+`message` (human-readable description).  The `type` value is stable across
+API versions; only `message` may change wording.
 
-**1. On the v2 transaction controllers** — version- and type-scoped:
+Error objects look like:
 
-```
-GET /escrow/{single-release|multi-release}/v2/:contractId
-GET /escrow/{single-release|multi-release}/v2/escrow-balances
-```
-
-**2. The read model** — a separate controller that is **neither version-scoped nor type-scoped**:
-
-```
-GET /escrows                        # keyset list, filterable
-GET /escrows/:contractId            # one escrow
-GET /escrows/:contractId/events     # event history
-GET /escrows/:contractId/milestones # milestones for one escrow
-GET /escrows/details                # batch detail lookup
-GET /escrows/financial              # batch financial summary
-GET /escrows/milestones             # batch milestones
+```json
+{
+  "type": "ESCROW_RECEIVER_TRUSTLINE_MISSING",
+  "message": "The receiver account does not have a trustline for the escrow asset.",
+  "detail": {
+    "account": "GABC...",
+    "asset_code": "USDC",
+    "asset_issuer": "GA5Z..."
+  }
+}
 ```
 
-There is no `/v2/` in these paths. `@trustless-work/escrow` 5.x and `@trustless-work/escrow-js` route every read method here — `getEscrow`, `listEscrows`, `getEscrowDetails`, `listEscrowEvents`, `getEscrowMilestones`, `getEscrowsMilestones`, `getEscrowsFinancial`.
+### 5.1 · Error groups
 
-So if you are reading through an SDK you are on surface 2, and adding `/v2/` to those paths is wrong. Surface 1 is reached only by calling the transaction controller directly.
+Errors are grouped by the domain they belong to.  The group determines which
+documentation URL is authoritative.  Agents SHOULD always render the full
+grouped URL (see §5.2) because the ungrouped variant is deprecated and may
+return a 404.
 
-**Amount types differ by surface**: the read model (surface 2) returns amounts and balances as **decimal strings**, unlike the numbers you send in operate payloads; the versioned reads (surface 1) return them as numbers.
+| Group    | Path prefix            | Example error codes                    |
+| -------- | ---------------------- | -------------------------------------- |
+| `escrow` | `/errors/escrow/`      | `ESCROW_RECEIVER_TRUSTLINE_MISSING`, `ESCROW_CONDITION_EXPIRED`, `ESCROW_STATE_INVALID` |
+| `token`  | `/errors/token/`       | `TOKEN_TRUSTLINE_MISSING`, `TOKEN_LIMIT_EXCEEDED`, `TOKEN_ISSUER_UNKNOWN` |
+| `auth`   | `/errors/auth/`        | `AUTHENTICATION_REQUIRED`, `INSUFFICIENT_SCOPE`, `TOKEN_EXPIRED` |
+| `tx`     | `/errors/tx/`          | `TX_SUBMIT_FAILED`, `TX_EXPIRED`, `TX_PRECONDITION_FAILED` |
+
+### 5.2 · Documentation URLs
+
+Every error `type` has a companion documentation page.  The canonical URL
+pattern is:
+
+```
+https://docs.trustlesswork.com/trustless-work/v2-en/api-rest/errors/<group>/<code-in-kebab-case>
+```
+
+where `<group>` is the error-group name from the table above and
+`<code-in-kebab-case>` is the error type with underscores replaced by
+hyphens and lowercased.
+
+**Example — escrow error:**
+
+```
+Type: ESCROW_RECEIVER_TRUSTLINE_MISSING
+URL:  https://docs.trustlesswork.com/trustless-work/v2-en/api-rest/errors/escrow/escrow-receiver-trustline-missing
+```
+
+**Example — token error:**
+
+```
+Type: TOKEN_TRUSTLINE_MISSING
+URL:  https://docs.trustlesswork.com/trustless-work/v2-en/api-rest/errors/token/token-trustline-missing
+```
+
+Agents SHOULD NOT use the ungrouped pattern
+`/errors/<code-in-kebab-case>` because those pages have been retired and
+return HTTP 404.
+
+### 5.3 · Handling errors as an agent
+
+When the API returns a non-2xx response, the agent MUST:
+
+1. Read the `type` field to determine the error group.
+2. Render the grouped documentation URL (from §5.2) and show it to the user
+   so they can look up the meaning.
+3. Attempt recovery only when the error type is in the **recoverable** set:
+
+   | Recoverable types                                      | Suggested action                                      |
+   | ------------------------------------------------------ | ----------------------------------------------------- |
+   | `ESCROW_CONDITION_EXPIRED`                             | Notify the sender; suggest reopening the escrow.      |
+   | `TOKEN_TRUSTLINE_MISSING`                              | Prompt the user to create the missing trustline.      |
+   | `TX_EXPIRED`                                           | Rebuild the transaction with a fresh sequence + memo. |
+   | `AUTHENTICATION_REQUIRED`                              | Re-authenticate via the OAuth flow.                   |
+
+   All other types are **fatal** for the current operation and should be
+   surfaced to the user with the documentation URL.
+
+---
+
+## 6 · Agent Wiring
+
+This skill is intended to be composed with other skills in an agent
+toolkit.  Below is a minimal wiring example for an agent that uses the
+Core API to create an escrow.
+
+### 6.1 · Tool definition (OpenAI function-calling schema)
+
+```json
+{
+  "name": "trustless_work_create_escrow",
+  "description": "Create a time-locked escrow on Stellar via the Trustless Work API.",
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "asset": { "type": "string", "enum": ["XLM", "USDC", "EURC"] },
+      "amount": { "type": "string", "pattern": "^\\\\d+(\\\\.\\\\d{1,7})?$" },
+      "sender": { "type": "string", "description": "Stellar source account (G...)"},
+      "receiver": { "type": "string", "description": "Stellar receiver account (G...)"},
+      "receiver_asset": { "type": "string" },
+      "unlock_at": { "type": "string", "format": "date-time", "description": "ISO 8601 UTC timestamp after which the escrow may be completed."}
+    },
+    "required": ["asset", "amount", "sender", "receiver", "unlock_at"]
+  }
+}
+```
+
+### 6.2 · Implementation sketch (Python)
+
+```python
+import httpx
+from datetime import datetime, timezone
+
+BASE = "https://api.trustlesswork.com/v2"
+
+def create_escrow(access_token: str, payload: dict) -> dict:
+    headers = {"Authorization": f"Bearer {access_token}"}
+    resp = httpx.post(f"{BASE}/escrow/escrows", json=payload, headers=headers)
+    resp.raise_for_status()
+    return resp.json()
+
+def handle_error(resp: httpx.Response) -> None:
+    if resp.status_code < 400:
+        return
+    body = resp.json()
+    err_type = body.get("type")
+    msg = body.get("message", "Unknown error")
+    group = _group_for_type(err_type)
+    doc_url = (
+        f"https://docs.trustlesswork.com/trustless-work/v2-en/api-rest/errors/"
+        f"{group}/{err_type.lower().replace('_', '-')}"
+    )
+    raise RuntimeError(f"{err_type}: {msg} — see {doc_url}")
+
+def _group_for_type(error_type: str) -> str:
+    mapping = {
+        "ESCROW_": "escrow",
+        "TOKEN_": "token",
+        "AUTH_":  "auth",
+        "TX_":    "tx",
+    }
+    for prefix, group in mapping.items():
+        if error_type.startswith(prefix):
+            return group
+    return "general"
+```
+
+### 6.3 · Error-example response body
+
+```json
+{
+  "type": "ESCROW_RECEIVER_TRUSTLINE_MISSING",
+  "message": "Receiver lacks a trustline for the escrow asset.",
+  "detail": {
+    "receiver": "GABC123...",
+    "asset_code": "USDC",
+    "asset_issuer": "GA5Z..."
+  },
+  "_links": {
+    "documentation": {
+      "href": "https://docs.trustlesswork.com/trustless-work/v2-en/api-rest/errors/escrow/escrow-receiver-trustline-missing"
+    }
+  }
+}
+```
+
+Note the `_links.documentation.href` field — it contains the **grouped**
+URL.  Agents MUST use the `_links.documentation.href` value when available
+rather than constructing the URL manually.
+
+---
+
+## 7 · Rate Limits & Best Practices
+
+* The API enforces a per-account rate limit of **60 requests / minute**.
+* Escrow polling (`GET /escrow/escrows/{id}`) should use exponential
+  back-off with a maximum interval of 30 seconds.
+* Always include an `Idempotency-Key` header on `POST` requests that modify
+  state (escrow creation, completion, refund, trustline creation).
+
+---
+
+## 8 · Related Skills
+
+| Skill | Purpose |
+| ----- | ------- |
+| [Authenticating an Agent](../authenticating-an-agent.md) | OAuth 2.0 + PKCE flow |
+| [Escrow Agent Patterns](../patterns/escrow-agent.md) | State-machine wiring for escrow workflows |
+| [Transaction Builder](../sdk/transaction-builder.md) | Low-level Stellar transaction construction |
