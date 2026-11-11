@@ -8,6 +8,8 @@
 
 A comprehensive AI skill for developing with the Trustless Work platform - enabling escrow contracts, milestone-based payments, and dispute resolution on the Stellar blockchain.
 
+> This skill covers **Stellar** development. For using Trustless Work escrows on **Arc** (Circle's EVM L1) through Circle wallets, see the [Trustless Work Arc Escrow Skill](https://github.com/Trustless-Work/trustlesswork-arc-skill).
+
 ## Installation
 
 Install this skill using:

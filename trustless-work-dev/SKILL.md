@@ -21,6 +21,8 @@ allowed-tools: mcp__trustless-work__searchDocumentation mcp__trustless-work__get
 
 This skill provides comprehensive guidance for integrating Trustless Work escrow contracts into applications. Use the reference files below for detailed implementation guides.
 
+> **Chain scope:** This skill covers **Stellar** development (API, SDKs, and protocol versions). For using Trustless Work escrows on **Arc** through Circle wallets, use the [Trustless Work Arc Escrow Skill](https://github.com/Trustless-Work/trustlesswork-arc-skill).
+
 ## Quick Start
 
 ### Installation
